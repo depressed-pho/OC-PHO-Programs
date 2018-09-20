@@ -4,35 +4,41 @@ local net = require("minitel")
 local function parseOpts(optsDesc, cmd, ...)
    local shell      = require("shell")
    local args, opts = shell.parse(...)
-   for opt, arg in pairs(opts) do
-      local desc = optsDesc[opt]
+   local res        = {}
+   for longOpt, arg in pairs(opts) do
+      local desc = optsDesc[longOpt]
       if desc then
          -- It's a known long option.
-         opts[opt] = nil
+         opts[longOpt] = nil
          if desc == true then
             -- It takes an argument.
             if arg == true then
-               print(cmd..": option --"..opt.." takes an argument.")
+               print(cmd..": option --"..longOpt.." takes an argument.")
                return nil
+            else
+               res[longOpt] = arg
             end
          elseif type(desc) == "string" then
             -- It has a short variant and takes no arguments.
+            local shortOpt = desc
             if arg == true then
-               opts[desc] = nil
+               opts[shortOpt] = nil
+               res[longOpt] = arg
             else
-               print(cmd..": option --"..opt.." takes no arguments.")
+               print(cmd..": option --"..longOpt.." takes no arguments.")
                return nil
             end
          end
       end
    end
-   for opt, desc in pairs(optsDesc) do
+   for longOpt, desc in pairs(optsDesc) do
       if type(desc) == "string" then
-         local arg = opts[desc]
+         -- It's a known short option.
+         local shortOpt = desc
+         local arg      = opts[desc]
          if arg then
-            -- It's a known short option.
-            opts[desc] = nil
-            opts[opt ] = arg
+            opts[shortOpt] = nil
+            res[longOpt] = arg
          end
       end
    end
