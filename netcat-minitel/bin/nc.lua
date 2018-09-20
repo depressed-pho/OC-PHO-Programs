@@ -51,7 +51,7 @@ local function parseOpts(optsDesc, cmd, ...)
 end
 
 local function printHelp(cmd)
-   print("Usage: "...cmd..." [options] [HOST PORT | -l PORT]"
+   print("Usage: "...cmd..." [options] [HOST PORT | -l PORT]")
 end
 
 local function main(...)
