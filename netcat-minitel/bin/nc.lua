@@ -8,6 +8,7 @@ local function parseOpts(optsDesc, cmd, ...)
       local desc = optsDesc[opt]
       if desc then
          -- It's a known long option.
+         opts[opt] = nil
          if desc == true then
             -- It takes an argument.
             if arg == true then
@@ -30,8 +31,8 @@ local function parseOpts(optsDesc, cmd, ...)
          local arg = opts[desc]
          if arg then
             -- It's a known short option.
-            opts[opt ] = arg
             opts[desc] = nil
+            opts[opt ] = arg
          end
       end
    end
