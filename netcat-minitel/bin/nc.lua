@@ -23,9 +23,6 @@ local function parseOpts(optsDesc, cmd, ...)
                return nil
             end
          end
-      else
-         print(cmd..": unknown option: --"..opt)
-         return nil
       end
    end
    for opt, desc in pairs(optsDesc) do
@@ -51,7 +48,7 @@ local function parseOpts(optsDesc, cmd, ...)
 end
 
 local function printHelp(cmd)
-   print("Usage: "...cmd..." [options] [HOST PORT | -l PORT]")
+   print("Usage: "..cmd.." [options] [HOST PORT | -l PORT]")
 end
 
 local function main(...)
@@ -77,11 +74,11 @@ local function main(...)
       printHelp(cmd)
       return 0
 
-   elseif opts.listen and #args =~ 1 then
+   elseif opts.listen and #args ~= 1 then
       printHelp(cmd)
       return 1
 
-   elseif #args =~ 2 then
+   elseif #args ~= 2 then
       printHelp(cmd)
       return 1
    end
