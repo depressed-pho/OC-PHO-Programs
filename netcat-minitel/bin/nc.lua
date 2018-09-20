@@ -56,6 +56,26 @@ end
 
 local function printHelp(cmd)
    print("Usage: "..cmd.." [options] [HOST PORT | -l PORT]")
+   print([[
+    -h, --help
+        Display this message
+    -u, --unreliable
+        Use unreliable datagram transport instead of stream
+    -r, --reliable
+        Use reliable unordered datagram transport instead of stream
+    -d, --ordered
+        Use reliable ordered datagram transport instead of stream
+    -v, --verbose
+        Turn on verbosity
+    -l, --listen
+        Behave as a server as opposed to a client
+    --output=FILE
+        Send a dump of the traffic to the specified file
+    --mtu=NUM
+        Maximum packet size to be sent without getting fragmented
+    --wait=NUM
+        Connection timeout in seconds
+]])
 end
 
 local function main(...)
