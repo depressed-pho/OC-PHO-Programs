@@ -40,7 +40,11 @@ local function parseOpts(optsDesc, cmd, ...)
    end
    -- Any of the remaining pairs are unknown.
    for opt, arg in pairs(opts) do
-      print(cmd..": unknown option: "..(#opt == 1 ? "-" : "--")..opt)
+      if #opt == 1 then
+         print(cmd..": unknown option: -"..opt)
+      else
+         print(cmd..": unknown option: --"..opt)
+      end
       return nil
    end
    return args, opts
