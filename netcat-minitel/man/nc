@@ -1,0 +1,59 @@
+NAME
+    nc -- Command-line utility for reading and writing data across
+          minitel network
+
+SYNOPSIS
+    nc -h
+    nc --help
+    nc [-urdv] [--output=FILE] [--mtu=NUM] [--wait=NUM] HOST PORT
+    nc [-urdv] [--output=FILE] [--mtu=NUM] [--wait=NUM] -l PORT
+
+DESCRIPTION
+    nc (netcat) allows you to use minitel network
+    (reliable/unreliable, ordered/unordered, stream/datagram) from the
+    shell.
+
+    For connecting to remote hosts, it's usually only necessary to
+    supply the host and port for the connection. For listening on a
+    socket, you must specify `-l' for listening, and port to specify
+    the port on which you want to listen.
+
+    The options are as follows (with C and S indicating whether the
+    option applies to the "client" or "server" roles in a
+    conversation):
+
+    -h, --help
+        Display a short help message.
+
+    -u, --unreliable
+        (CS) Select unreliable datagram transport as opposed to
+        reliable ordered stream (the default).
+
+    -r, --reliable
+        (CS) Select reliable unordered datagram transport as opposed
+        to stream (the default).
+
+    -d, --ordered
+        (CS) Select reliable ordered datagram transport as opposed to
+        stream (the default).
+
+    -v, --verbose
+        (CS) Turn on verbosity.
+
+    -l, --listen
+        (S) Select "listen" mode instead of connect mode so that
+        clients can connect to the socket nc listens on.
+
+    --output=FILE
+        (CS) Send a dump of the traffic to the specified file.
+
+    --mtu=NUM
+        (CS) Specify the maximum packet size to be sent without
+        getting fragmented.
+
+    --wait=NUM
+        (C) Specify the time in seconds to wait for a response while
+        trying to establish a connection.
+
+SEE ALSO
+    cat

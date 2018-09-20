@@ -32,6 +32,7 @@ there were 3 candidates I could use:
 ### minitel
 
 * Has routing.
+* Sounds like Newspeak.
 * Uses ```/etc/hostname``` as address, so DNS is not required.
 * Hosts can have only single address, which isn't cool although it
   would practically be not an issue.

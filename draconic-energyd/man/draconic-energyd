@@ -2,7 +2,7 @@ NAME
     draconic-energyd -- Draconic Evolution energy storage monitor daemon
 
 SYNOPSIS
-    draconic-energyd [-f] [-c FILE]
+    draconic-energyd [-f] [-c file]
     draconic-energyd status
     draconic-energyd stop
 
@@ -13,7 +13,7 @@ DESCRIPTION
 
     -f       Run as a foreground process and also enables debugging output.
 
-    -c FILE  Use the specified file instead of the default configuration file.
+    -c file  Use the specified file instead of the default configuration file.
 
     status   Show the status of currently running daemon if any.
 
@@ -39,7 +39,8 @@ SETTING UP
 NETWORKING PROTOCOL
     This program uses the Minitel networking stack to listen on a
     socket for incoming connections. Upon establishing a connection,
-    the client is expected to send out RPC messages to the server:
+    the client is expected to send out RPC messages to the server
+    ("C:" and "S:" indicates the direction of messages):
 
         C: {openrpc="1.0", method="list-energy-storages", id=1}
         S: {openrpc="1.0", result={"xxxx-xxxx-xxxx-xxxx", "yyyy-yyyy-yyyy-yyyy"}, id=1}
@@ -77,3 +78,6 @@ NETWORKING PROTOCOL
 
 FILES
     /etc/draconic-energyd.conf  default configuration file.
+
+SEE ALSO
+    minitel, openrpc
