@@ -12,7 +12,7 @@ there were 3 candidates I could use:
   [dispenser](https://github.com/OpenPrograms/Wuerfel_21-OC-Toolkit/tree/master/dispenser)
 * [minitel](https://github.com/ShadowKatStudios/OC-Minitel/tree/master/)
 
-### ```network```
+### network
 
 * Has routing.
 * Looks cool, especially for its ```ifconfig```.
@@ -24,12 +24,12 @@ there were 3 candidates I could use:
   unreliable unordered indexed stream.
 * No packet segmentation based on MTU.
 
-### ```dispenser```
+### dispenser
 
 * Just a thin wrapper of the ```modem``` component.
 * No routing nor reliable message transfer.
 
-### ```minitel```
+### minitel
 
 * Has routing.
 * Uses ```/etc/hostname``` as address, so DNS is not required.
@@ -141,13 +141,24 @@ So here is the last resort. Let's use, ugh, the Lua-specific
 serialization library inside our protocol...
 
 ```
-C: {ocrpc="1.0", method="list-energy-storages", id=1}
-S: {ocrpc="1.0", result={"xxxx-xxxx-xxxx-xxxx", "yyyy-yyyy-yyyy-yyyy"}, id=1}
-C: {ocrpc="1.0", method="get-energy-storage", params={"xxxx-xxxx-xxxx-xxxx"}, id=2}
-S: {ocrpc="1.0", result={energyStored=1099511627776, ...}, id=2}
+C: {openrpc="1.0", method="list-energy-storages", id=1}
+S: {openrpc="1.0", result={"xxxx-xxxx-xxxx-xxxx", "yyyy-yyyy-yyyy-yyyy"}, id=1}
+C: {openrpc="1.0", method="get-energy-storage", params={"xxxx-xxxx-xxxx-xxxx"}, id=2}
+S: {openrpc="1.0", result={energyStored=1099511627776, ...}, id=2}
 ```
 
 I'm not happy with it **at all**, because it is never a good idea to
 use such a non-standard serialization format in a protocol. But
 meh... I can live with that. At least I could write a generic
 server/client library and some tools to deal with it.
+
+## OpenRPC
+
+An RPC stack clearly needs to rely on a specific network stack, but I
+really didn't want it to target only OpenOS. Because Plan9k looked so
+primising.
+
+But I obviously didn't want to reimplement it over and over for each
+and every OS out there, so I decided to start with OpenOS/minitel
+backend while trying to keep the OS specific portion as small as
+possible.

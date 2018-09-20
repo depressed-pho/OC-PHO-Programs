@@ -1,0 +1,79 @@
+NAME
+    draconic-energyd -- Draconic Evolution energy storage monitor daemon
+
+SYNOPSIS
+    draconic-energyd [-f] [-c FILE]
+    draconic-energyd status
+    draconic-energyd stop
+
+DESCRIPTION
+    This program is a daemon to be controlled by
+    `/etc/rc.d/draconic-energyd', and users are not expected to run it
+    directly. It may take the following options:
+
+    -f       Run as a foreground process and also enables debugging output.
+
+    -c FILE  Use the specified file instead of the default configuration file.
+
+    status   Show the status of currently running daemon if any.
+
+    stop     Stop currently running daemon if any.
+
+CONFIGURATION
+    This program uses Kilobyte's configparser library. The file may contain
+    the following options:
+
+    port     Port number on which the daemon listens for connections,
+             default 7272.
+
+EXAMPLE CONFIGURATION
+    # The port number.
+    port 7272;
+
+SETTING UP
+    In order to monitor an energy storage, one must place an Adapter
+    block right next to an Energy Pylon and then connect it to the
+    computer. There may be arbitrary many energy storages monitored by
+    a single daemon.
+
+NETWORKING PROTOCOL
+    This program uses the Minitel networking stack to listen on a
+    socket for incoming connections. Upon establishing a connection,
+    the client is expected to send out RPC messages to the server:
+
+        C: {openrpc="1.0", method="list-energy-storages", id=1}
+        S: {openrpc="1.0", result={"xxxx-xxxx-xxxx-xxxx", "yyyy-yyyy-yyyy-yyyy"}, id=1}
+        C: {openrpc="1.0", method="get-energy-storage", params={"xxxx-xxxx-xxxx-xxxx"}, id=2}
+        S: {openrpc="1.0", result={energyStored=1099511627776, ...}, id=2}
+
+    The RPC protocol is described in another man page
+    `openrpc'. Currently defined RPC methods are as follows:
+
+    "list-energy-storages"
+        Parameters:
+            none
+        Result value:
+            List of component addresses.
+        Error codes:
+            none
+        Description:
+            Get the list of all the energy storages connected to the
+            server.
+
+    "get-energy-storage"
+        Parameters:
+            An array consisting of a single component address pointing
+            to an energy storage.
+        Result value:
+            {
+                energyStored    = <number>, -- RF
+                maxEnergyStored = <number>, -- RF
+                transferPerTick = <number>  -- RF/t
+            }
+        Error codes:
+            * 1: Energy storage not found.
+        Description:
+            Retrieve information about an energy storage.
+
+FILES
+    /etc/draconic-energyd.conf  default configuration file.
