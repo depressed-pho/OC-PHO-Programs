@@ -4,11 +4,12 @@ server.__index = server
 
 -- Open a buffer representing a stream socket in the server mode. This
 -- function does not block.
-function server.open(port)
+function server.open(verbose, port)
    checkArg(1, port, "number")
 
    local self = setmetatable({}, server)
-   self.port = port
+   self.port     = port
+   self.listener = nil  -- thread
 
    print("FIXME: Spawn a thread that listens on the port: "..port)
 
