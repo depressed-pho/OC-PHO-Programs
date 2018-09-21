@@ -65,18 +65,26 @@ local function main(...)
       end
    end
 
-   if tonumber(opts.mtu) == nil then
-      printHelp(cmd)
-      return 1
+   if opts.mtu then
+      if tonumber(opts.mtu) == nil then
+         printHelp(cmd)
+         return 1
+      else
+         opts.mtu = tonumber(opts.mtu)
+      end
    else
-      opts.mtu = tonumber(opts.mtu)
+      opts.mtu = minitel.mtu
    end
 
-   if tonumber(opts.wait) == nil then
-      printHelp(cmd)
-      return 1
+   if opts.wait then
+      if tonumber(opts.wait) == nil then
+         printHelp(cmd)
+         return 1
+      else
+         opts.wait = tonumber(opts.wait)
+      end
    else
-      opts.wait = tonumber(opts.wait)
+      opts.wait = minitel.streamdelay
    end
 
    -- Now we are going to modify global parameters of minitel. Take
