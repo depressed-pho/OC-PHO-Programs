@@ -1,58 +1,5 @@
-local net = require("minitel")
-
--- THINKME: Maybe we should move this to a separate library.
-local function parseOpts(optsDesc, cmd, ...)
-   local shell      = require("shell")
-   local args, opts = shell.parse(...)
-   local res        = {}
-   for longOpt, arg in pairs(opts) do
-      local desc = optsDesc[longOpt]
-      if desc then
-         -- It's a known long option.
-         opts[longOpt] = nil
-         if desc == true then
-            -- It takes an argument.
-            if arg == true then
-               print(cmd..": option --"..longOpt.." takes an argument.")
-               return nil
-            else
-               res[longOpt] = arg
-            end
-         elseif type(desc) == "string" then
-            -- It has a short variant and takes no arguments.
-            local shortOpt = desc
-            if arg == true then
-               opts[shortOpt] = nil
-               res[longOpt] = arg
-            else
-               print(cmd..": option --"..longOpt.." takes no arguments.")
-               return nil
-            end
-         end
-      end
-   end
-   for longOpt, desc in pairs(optsDesc) do
-      if type(desc) == "string" then
-         -- It's a known short option.
-         local shortOpt = desc
-         local arg      = opts[desc]
-         if arg then
-            opts[shortOpt] = nil
-            res[longOpt] = arg
-         end
-      end
-   end
-   -- Any of the remaining pairs are unknown.
-   for opt, arg in pairs(opts) do
-      if #opt == 1 then
-         print(cmd..": unknown option: -"..opt)
-      else
-         print(cmd..": unknown option: --"..opt)
-      end
-      return nil
-   end
-   return args, opts
-end
+local net     = require("minitel")
+local options = require("netcat-minitel/options")
 
 local function printHelp(cmd)
    print("Usage: "..cmd.." [options] [HOST PORT | -l PORT]")
@@ -74,8 +21,7 @@ local function printHelp(cmd)
     --mtu=NUM
         Maximum packet size to be sent without getting fragmented
     --wait=NUM
-        Connection timeout in seconds
-]])
+        Connection timeout in seconds]])
 end
 
 local function main(...)
@@ -91,7 +37,7 @@ local function main(...)
       wait       = true
    }
    local cmd = "nc"
-   local args, opts = parseOpts(optsDesc, cmd, ...)
+   local args, opts = options.parse(optsDesc, cmd, ...)
 
    if not opts then
       printHelp(cmd)
@@ -108,6 +54,25 @@ local function main(...)
    elseif #args ~= 2 then
       printHelp(cmd)
       return 1
+   end
+
+   -- We need to read from two sources at the same time, a socket and
+   -- stdin. And since term.read() is a blocking call, we spawn 2
+   -- threads for them.
+
+   local sock -- buffer
+   if opts.unreliable then
+      -- FIXME
+   elseif opts.reliable then
+      -- FIXME
+   elseif opts.ordered then
+      -- FIXME
+   else
+      if opts.listen then
+         sock = require("netcat-minitel/buffer/stream/server")
+      else
+         -- FIXME
+      end
    end
 
    return 0
