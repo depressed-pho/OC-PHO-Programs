@@ -24,6 +24,28 @@ local function printHelp(cmd)
         Connection timeout in seconds]])
 end
 
+local function protected_main(opts)
+   local sock -- buffer
+   if opts.unreliable then
+      -- FIXME
+   elseif opts.reliable then
+      -- FIXME
+   elseif opts.ordered then
+      -- FIXME
+   else
+      if opts.listen then
+         local server = require("netcat-minitel/buffer/stream/server")
+         sock = server.open(opts.port)
+      else
+         -- FIXME
+      end
+   end
+
+   -- We need to read from two sources at the same time, a socket and
+   -- stdin. And since buffer:read() is a blocking call, we spawn 2
+   -- threads for them.
+end
+
 local function main(...)
    local optsDesc = {
       help       = "h",
@@ -103,28 +125,6 @@ local function main(...)
    end
 
    return result
-end
-
-local function protected_main(opts)
-   local sock -- buffer
-   if opts.unreliable then
-      -- FIXME
-   elseif opts.reliable then
-      -- FIXME
-   elseif opts.ordered then
-      -- FIXME
-   else
-      if opts.listen then
-         local server = require("netcat-minitel/buffer/stream/server")
-         sock = server.open(opts.port)
-      else
-         -- FIXME
-      end
-   end
-
-   -- We need to read from two sources at the same time, a socket and
-   -- stdin. And since buffer:read() is a blocking call, we spawn 2
-   -- threads for them.
 end
 
 return main(...)
