@@ -47,11 +47,7 @@ local function main(...)
       printHelp(cmd)
       return 0
 
-   elseif opts.listen and #args ~= 1 then
-      printHelp(cmd)
-      return 1
-
-   elseif #args ~= 2 then
+   elseif (opts.listen and #args ~= 1) or (not opts.listen and #args ~= 2) then
       printHelp(cmd)
       return 1
    end

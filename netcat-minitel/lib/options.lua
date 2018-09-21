@@ -50,7 +50,7 @@ function options.parse(optsDesc, cmd, ...)
       end
       return nil
    end
-   return args, opts
+   return args, res
 end
 
 return options
