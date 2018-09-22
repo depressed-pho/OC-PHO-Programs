@@ -42,7 +42,8 @@ function options.parse(optsDesc, cmd, ...)
       end
    end
    -- Any of the remaining pairs are unknown.
-   for opt, arg in pairs(opts) do
+   local opt = next(opts)
+   if opt then
       if #opt == 1 then
          print(cmd..": unknown option: -"..opt)
       else

@@ -95,7 +95,7 @@ local function main(...)
          opts.mtu = tonumber(opts.mtu)
       end
    else
-      opts.mtu = minitel.mtu
+      opts.mtu = net.mtu
    end
 
    if opts.wait then
@@ -106,20 +106,20 @@ local function main(...)
          opts.wait = tonumber(opts.wait)
       end
    else
-      opts.wait = minitel.streamdelay
+      opts.wait = net.streamdelay
    end
 
    -- Now we are going to modify global parameters of minitel. Take
    -- extra care to restore them even when something goes wrong.
    local saved = {
-      mtu         = minitel.mtu,
-      streamdelay = minitel.streamdelay
+      mtu         = net.mtu,
+      streamdelay = net.streamdelay
    }
-   minitel.mtu         = opts.mtu
-   minitel.streamdelay = opts.wait
+   net.mtu         = opts.mtu
+   net.streamdelay = opts.wait
    local ok, result, reason = xpcall(protected_main, debug.traceback, opts)
-   minitel.mtu         = saved.mtu
-   minitel.streamdelay = saved.streamdelay
+   net.mtu         = saved.mtu
+   net.streamdelay = saved.streamdelay
    if not ok then
       error(reason, 0)
    end

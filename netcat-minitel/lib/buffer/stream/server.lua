@@ -1,4 +1,5 @@
 local buffer = require("buffer")
+local thread = require("thread")
 local server = {}
 server.__index = server
 
@@ -8,12 +9,15 @@ function server.open(verbose, port)
    checkArg(1, port, "number")
 
    local self = setmetatable({}, server)
-   self.port     = port
-   self.listener = nil  -- thread
-
-   print("FIXME: Spawn a thread that listens on the port: "..port)
+   self.verbose = verbose
+   self.port    = port
+   thread.create(self._listen, self):detach()
 
    return buffer.new("rw", self)
+end
+
+function server:_listen()
+   print("FIXME: Spawn a thread that listens on the port: "..self.port)
 end
 
 -- Called by the buffer library.
@@ -35,7 +39,7 @@ function server:read(numOctets)
 end
 
 -- Called by the buffer library. Will never block.
-function server:seek(whence, offset)
+function server:seek(whence, offset) -- luacheck: ignore self
    return nil, "buffer.stream.server: operation not supported: seek "
       ..whence..", "..offset
 end
