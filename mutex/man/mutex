@@ -1,0 +1,51 @@
+NAME
+    mutex -- Low-level synchronization based on the thread API
+
+SYNOPSIS
+    local mutex = require("mutex")
+
+    -- Create a new mutex.
+    local m = mutex.new()
+
+    -- Acquire and release exclusive ownership.
+    m:lock()
+    m:unlock()
+
+    -- Acquire and release shared ownership.
+    m:lock_shared()
+    m:unlock_shared()
+
+DESCRIPTION
+    This module provides a multiple-reader, single-writer mutex.
+
+CONSTRUCTOR
+    mutex.new(): mutex
+        Create a mutex. At most one thread can have exclusive
+        ownership, and if any thread does have exclusive ownership, no
+        other threads can have shared or exclusive
+        ownership. Alternatively, many threads may have shared
+        ownership.
+
+METHODS
+    m:lock([timeout: number]): boolean
+        Acquire exclusive ownership. The current thread blocks until
+        ownership can be obtained. A thread that already has exclusive
+        ownership of a given instance of mutex can call this function
+        to acquire an additional level of ownership of the
+        mutex. m:unlock() must be called for each level of ownership
+        acquired by a single thread before ownership can be acquired
+        by another thread.
+
+        Return true on sucess, or false when timed out.
+
+    m:unlock(): void
+        Release exclusive ownership owned by the current thread.
+
+    m:lock_shared([timeout: number]): boolean
+        Like m:lock() but instead acquire shared ownership.
+
+    m:unlock_shared()
+        Like :unlock() but instead release shared ownership.
+
+SEE ALSO
+    thread
