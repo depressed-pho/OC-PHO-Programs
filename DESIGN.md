@@ -2,7 +2,7 @@
 
 ## Network stack
 
-I really wanted my generator controller to work remotely over the
+I really wanted my reactor controller to work remotely over the
 network, but OpenOS had no standard networking stack at the time, and
 there were 3 candidates I could use:
 
@@ -42,7 +42,7 @@ there were 3 candidates I could use:
   network cards.
 
 So minitel was the only choice for applications that require
-reliability. I didn't want my Draconic Generator to destroy the world
+reliability. I didn't want my Draconic Reactor to destroy the world
 just because some network packets were lost.
 
 ## Protocol for draconic-energy-monitor
