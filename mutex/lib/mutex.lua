@@ -106,6 +106,8 @@ function mutex:unlock()
    if self.exLevel == 0 then
       self.exOwner = nil
    end
+
+   event.push("mutex.unlocked", self.id)
 end
 
 -- Like :lock() but instead acquire shared ownership.
@@ -146,6 +148,8 @@ function mutex:unlock_shared()
    else
       self.shOwners[me] = level - 1
    end
+
+   event.push("mutex.unlocked", self.id)
 end
 
 return mutex
