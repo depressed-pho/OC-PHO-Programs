@@ -53,7 +53,7 @@ local function _parse(line)
       string.match(line, "^%s*not%s+ok%s+(%d+)%s+(.*)$")
    if badNum then
       local desc, dir = _parseDescAndDir(badTail)
-      return result.test.new(false, tonumber(goodNum), desc, dir)
+      return result.test.new(false, tonumber(badNum), desc, dir)
    end
 
    local bailReason = string.match(line, "^%s*Bail out!%s*(.*)$")
