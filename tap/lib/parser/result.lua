@@ -104,6 +104,8 @@ function result.bailOut.new(reason)
    setmetatable(self, result.bailOut)
 
    self.reason = reason
+
+   return self
 end
 
 function result.bailOut:as_string()

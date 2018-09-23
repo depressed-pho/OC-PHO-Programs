@@ -1,8 +1,6 @@
 local result = require("tap/parser/result")
 
 local function _parseDescAndDir(tail)
-   local desc, dir
-
    local skipDesc, skipReason = string.match(
       tail, "^([^#]*)%s*#%s*[Ss][Kk][Ii][Pp]%s+(.*)$")
    if skipDesc then
