@@ -105,10 +105,10 @@ function result.test.new(ok, number, description, directive)
    local self = result.new("test")
    setmetatable(self, result.test)
 
-   self.ok          = ok
-   self.number      = number
-   self.description = description
-   self.directive   = directive or {}
+   self.ok        = ok
+   self.num       = number
+   self.desc      = description
+   self.directive = directive or {}
 
    return self
 end
@@ -118,11 +118,11 @@ function result.test:isOK()
 end
 
 function result.test:number()
-   return self.number
+   return self.num
 end
 
 function result.test:description()
-   return self.description
+   return self.desc
 end
 
 function result.test:hasSkip()
@@ -139,10 +139,10 @@ function result.test:as_string()
    if not self.ok then
       str = str.."not "
    end
-   str = str.."ok "..self.number
+   str = str.."ok "..self.num
 
    if #self.description > 0 then
-      str = str.." "..self.description
+      str = str.." "..self.desc
    end
 
    if self.directive.skip then
