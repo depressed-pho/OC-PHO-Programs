@@ -6,18 +6,20 @@ local function _parseDescAndDir(tail)
    local skipDesc, skipReason = string.match(
       tail, "^([^#]*)%s*#%s*[Ss][Kk][Ii][Pp]%s+(.*)$")
    if skipDesc then
-      desc = skipDesc
-      dir  = {skip = skipReason}
+      local desc = skipDesc
+      local dir  = {skip = skipReason}
+      return desc, dir
    end
 
    local todoDesc, todoReason = string.match(
       tail, "^([^#]*)%s*#%s*[Tt][Oo][Dd][Oo]%s+(.*)$")
    if todoDesc then
-      desc = todoDesc
-      dir  = {todo = todoReason}
+      local desc = todoDesc
+      local dir  = {todo = todoReason}
+      return desc, dir
    end
 
-   return desc, dir
+   return tail, nil
 end
 
 local function _parse(line)
