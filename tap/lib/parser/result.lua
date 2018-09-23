@@ -63,14 +63,14 @@ function result.plan.new(planned, directive)
    local self = result.new("plan")
    setmetatable(self, result.plan)
 
-   self.testsPlanned = planned
-   self.directive    = directive or {}
+   self.planned   = planned
+   self.directive = directive or {}
 
    return self
 end
 
 function result.plan:testsPlanned()
-   return self.testsPlanned
+   return self.planned
 end
 
 function result.plan:hasSkip()
@@ -82,7 +82,7 @@ function result:reason()
 end
 
 function result.plan:as_string()
-   local str = "1.."..self.testsPlanned
+   local str = "1.."..self.planned
    if self.directive.skip then
       str = str.." # SKIP "..self.directive.skip
    end

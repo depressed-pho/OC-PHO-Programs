@@ -93,7 +93,7 @@ function harness:_runTest(stats, file)
 end
 
 function harness:_write(threashold, buffer, message)
-   if self.verbose >= threashold then
+   if self.verbosity >= threashold then
       buffer:write(message)
    end
 end
