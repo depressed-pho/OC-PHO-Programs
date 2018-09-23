@@ -10,8 +10,28 @@ function result.new(resultType)
    return self
 end
 
-function result:type()
-   return self.type
+function result:isVersion()
+   return self.type == "version"
+end
+
+function result:isPlan()
+   return self.type == "plan"
+end
+
+function result:isTest()
+   return self.type == "test"
+end
+
+function result:isBailOut()
+   return self.type == "bailOut"
+end
+
+function result:isOK() -- luacheck: ignore self
+   return true
+end
+
+function result:hasSkip() -- luacheck: ignore self
+   return false
 end
 
 function result:as_string() -- luacheck: ignore self
@@ -49,6 +69,18 @@ function result.plan.new(planned, directive)
    return self
 end
 
+function result.plan:testsPlanned()
+   return self.testsPlanned
+end
+
+function result.plan:hasSkip()
+   return not not self.directive.skip
+end
+
+function result:reason()
+   return self.directive.skip
+end
+
 function result.plan:as_string()
    local str = "1.."..self.testsPlanned
    if self.directive.skip then
@@ -71,6 +103,26 @@ function result.test.new(ok, number, description, directive)
    self.directive   = directive or {}
 
    return self
+end
+
+function result.test:isOK()
+   return self.ok
+end
+
+function result.test:number()
+   return self.number
+end
+
+function result.test:description()
+   return self.description
+end
+
+function result.test:hasSkip()
+   return not not self.directive.skip
+end
+
+function result.test:reason()
+   return self.directive.skip
 end
 
 function result.test:as_string()
@@ -106,6 +158,10 @@ function result.bailOut.new(reason)
    self.reason = reason
 
    return self
+end
+
+function result.bailOut:reason()
+   return self.reason
 end
 
 function result.bailOut:as_string()
