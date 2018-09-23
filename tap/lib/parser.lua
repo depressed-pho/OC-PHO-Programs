@@ -46,14 +46,14 @@ local function _parse(line)
       string.match(line, "^%s*ok%s+(%d+)%s+(.*)$")
    if goodNum then
       local desc, dir = _parseDescAndDir(goodTail)
-      return result.test.new(goodNum, desc, dir)
+      return result.test.new(true, tonumber(goodNum), desc, dir)
    end
 
    local badNum, badTail =
       string.match(line, "^%s*not%s+ok%s+(%d+)%s+(.*)$")
    if badNum then
       local desc, dir = _parseDescAndDir(badTail)
-      return result.test.new(goodNum, desc, dir)
+      return result.test.new(false, tonumber(goodNum), desc, dir)
    end
 
    local bailReason = string.match(line, "^%s*Bail out!%s*(.*)$")
