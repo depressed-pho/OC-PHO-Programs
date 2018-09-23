@@ -107,7 +107,7 @@ function result.test.new(ok, number, description, directive)
 
    self.ok        = ok
    self.num       = number
-   self.desc      = description
+   self.descr     = description
    self.directive = directive or {}
 
    return self
@@ -122,7 +122,7 @@ function result.test:number()
 end
 
 function result.test:description()
-   return self.desc
+   return self.descr
 end
 
 function result.test:hasSkip()
@@ -141,8 +141,8 @@ function result.test:as_string()
    end
    str = str.."ok "..self.num
 
-   if #self.description > 0 then
-      str = str.." "..self.desc
+   if #self.descr > 0 then
+      str = str.." "..self.descr
    end
 
    if self.directive.skip then

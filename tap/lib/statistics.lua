@@ -85,6 +85,8 @@ function statistics.forFile:test(isOK, number, description, skipReason, todoReas
          end
       end
 
+      self.lastNumber = number
+
       -- If this was the last planned test in the subtest, and if any
       -- of the subtests had failed, then the parent should also be
       -- marked as failed. Likewise, if all of the subtests had
@@ -102,8 +104,6 @@ function statistics.forFile:test(isOK, number, description, skipReason, todoReas
             self.parent.todoFailed = self.parent.todoFailed + self.todoFailed
             self.parent.child = nil
          end
-      else
-         self.lastNumber = number
       end
    end
 end
