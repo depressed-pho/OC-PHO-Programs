@@ -34,6 +34,10 @@ function result:hasSkip() -- luacheck: ignore self
    return false
 end
 
+function result:hasTodo() -- luacheck: ignore self
+   return false
+end
+
 function result:as_string() -- luacheck: ignore self
    error("This method has to be overridden")
 end
@@ -75,6 +79,10 @@ end
 
 function result.plan:hasSkip()
    return not not self.directive.skip
+end
+
+function result.plan:hasTodo()
+   return not not self.directive.todo
 end
 
 function result:reason()
