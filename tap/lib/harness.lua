@@ -85,10 +85,10 @@ function harness:_runTest(stats, file)
    end
    io.close(pipe)
 
-   if stats:isOK() then
-      self:_write(-1, io.stdout, " ok")
+   if stats:isOK(file) then
+      self:_write(-1, io.stdout, " ok\n")
    else
-      self:_write(-1, io.stdout, " failed")
+      self:_write(-1, io.stdout, " failed\n")
    end
 end
 

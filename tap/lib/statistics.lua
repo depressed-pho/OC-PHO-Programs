@@ -187,7 +187,7 @@ function statistics:result()
       failed     = failed     + #forFile.failed
       skipped    = skipped    + forFile.skipped
       todoPassed = todoPassed + #forFile.todoPassed
-      todoFailed = todoFailed + #forFile.todoFailed
+      todoFailed = todoFailed + forFile.todoFailed
       total      = total  + forFile.passed + #forFile.failed + forFile.skipped +
          #forFile.todoPassed + forFile.todoFailed
    end
@@ -202,7 +202,7 @@ function statistics:result()
    if todoFailed > 0 then
       result = result..", "..todoFailed.."/"..total.." failed expectedly"
    end
-   return result
+   return result..".\n"
 end
 
 return statistics
