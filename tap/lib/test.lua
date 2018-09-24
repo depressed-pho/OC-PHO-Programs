@@ -33,6 +33,7 @@ function test:plan(numTests)
       error("Tests already have a plan: "..top.plan)
    else
       top.plan = numTests
+      io.stdout.write("1.."..numTests)
    end
 end
 
