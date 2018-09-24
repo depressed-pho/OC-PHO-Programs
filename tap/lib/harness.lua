@@ -44,10 +44,6 @@ function harness:_runTest(stats, file)
    local pipe = io.popen(file, "r")
 
    self:_write(-1, io.stdout, file.." ... ")
-   local savedCursX, savedCursY
-   if self.isTTY then
-      savedCursX, savedCursY = term.getCursor()
-   end
 
    for r in parser(pipe) do
       self:_write(1, io.stdout, r:as_string())
@@ -71,16 +67,16 @@ function harness:_runTest(stats, file)
          end
 
          if self.verbosity == 0 and self.isTTY then
+            local savedCursX, savedCursY = term.getCursor()
+            term.write(stats:progress(file), true) -- wrap
             term.setCursor(savedCursX, savedCursY)
-            term.write(stats:progress(file), false) -- no wrap
          end
 
       elseif r:isBailOut() then
          stats:bailOut(file, r:reason())
 
          if self.verbosity == 0 and self.isTTY then
-            term.setCursor(savedCursX, savedCursY)
-            term.write(r:as_string(), true) -- wrap
+            io.stdout:write(r:as_string())
          end
       end
    end
