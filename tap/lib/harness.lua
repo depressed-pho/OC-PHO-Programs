@@ -75,7 +75,7 @@ function harness:_runTest(stats, file)
             term.write(stats:progress(file), false) -- no wrap
          end
 
-      elseif r:isBailout() then
+      elseif r:isBailOut() then
          stats:bailOut(file, r:reason())
 
          if self.verbosity == 0 and self.isTTY then

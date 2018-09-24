@@ -42,10 +42,10 @@ function test:requireOK(module)
 
    local ok, result, reason = xpcall(require, debug.traceback, module)
    if ok then
-      io.stdout:write("ok "..top.counter.."require "..module)
+      io.stdout:write("ok "..top.counter.." require "..module)
       return result
    else
-      io.stdout:write("not ok "..top.counter.."require "..module)
+      io.stdout:write("not ok "..top.counter.." require "..module)
       self:diag(reason)
       return nil
    end
