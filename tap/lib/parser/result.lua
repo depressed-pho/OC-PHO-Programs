@@ -180,8 +180,6 @@ function result.bailOut:as_string()
    return str
 end
 
-return result
-
 -- unknown
 result.unknown = setmetatable({}, result)
 result.unknown.__index = result.unknown
@@ -196,7 +194,7 @@ function result.unknown.new(line)
 end
 
 function result.unknown:as_string()
-   return line
+   return self.line
 end
 
 return result
