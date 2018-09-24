@@ -10,4 +10,4 @@ end
 ]]
 
 local h = harness.new()
-h:runTests({"test.lua"})
+h:runTests({"/usr/test/mutex.lua"})

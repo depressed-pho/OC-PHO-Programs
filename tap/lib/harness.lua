@@ -1,4 +1,5 @@
 local event      = require("event")
+local filesystem = require("filesystem")
 local parser     = require("tap/parser")
 local statistics = require("tap/statistics")
 local term       = require("term")
@@ -28,7 +29,11 @@ function harness:runTests(files) -- [file]
    event.listen("interrupted", interrupted)
 
    for _, file in ipairs(files) do
-      self:_runTest(stats, file)
+      if filesystem.exists(file) then
+         self:_runTest(stats, file)
+      else
+         io.stderr:write(file..": file not found")
+      end
    end
    self:_write(-2, io.stdout, stats:result())
 
@@ -37,10 +42,6 @@ end
 
 function harness:_runTest(stats, file)
    local pipe = io.popen(file, "r")
-   if not pipe then
-      self:_write(0, io.stderr, "File not found: "..file.."\n")
-      return
-   end
 
    self:_write(-1, io.stdout, file.." ... ")
    local savedCursX, savedCursY
