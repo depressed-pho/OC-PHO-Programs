@@ -83,6 +83,7 @@ function harness:_runTest(stats, file)
          end
       end
    end
+   stats:finished(file)
    io.close(pipe)
 
    if stats:isOK(file) then

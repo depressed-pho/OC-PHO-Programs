@@ -87,10 +87,8 @@ function statistics.forFile:test(isOK, number, description, skipReason, todoReas
 
       self.lastNumber = number
 
-      -- If this was the last planned test in the subtest, and if any
-      -- of the subtests had failed, then the parent should also be
-      -- marked as failed. Likewise, if all of the subtests had
-      -- passed, the parent should also be marked as passed.
+      -- If this was the last planned test in the subtest, then the
+      -- result of it should be propagated to the parent.
       if self.planned == number then
          if self.parent then
             self.parent.passed = self.parent.passed + self.passed
@@ -118,6 +116,16 @@ end
 
 function statistics.forFile:bailOut(reason)
    self.bailedOut = reason
+end
+
+function statistics.forFile:finished()
+   if self.planned then
+      -- If the number of the last executed test doesn't match the
+      -- plan, it should be considered to be a failure.
+      if self.lastNumber ~= self.planned then
+         table.insert(self.failed, self.planned.." tests planned but ran "..self.lastNumber)
+      end
+   end
 end
 
 function statistics.forFile:isOK()
@@ -162,6 +170,10 @@ end
 
 function statistics:bailOut(file, reason)
    self:_forFile(file):bailOut(reason)
+end
+
+function statistics:finished(file)
+   self:_forFile(file):finished()
 end
 
 function statistics:isOK(file)
