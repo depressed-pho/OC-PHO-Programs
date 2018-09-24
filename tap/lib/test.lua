@@ -33,7 +33,7 @@ function test:plan(numTests)
       error("Tests already have a plan: "..top.plan)
    else
       top.plan = numTests
-      io.stdout.write("1.."..numTests)
+      io.stdout.write("1.."..numTests.."\n")
    end
 end
 
@@ -43,10 +43,10 @@ function test:requireOK(module)
 
    local ok, result, reason = xpcall(require, debug.traceback, module)
    if ok then
-      io.stdout:write("ok "..top.counter.." require "..module)
+      io.stdout:write("ok "..top.counter.." require "..module.."\n")
       return result
    else
-      io.stdout:write("not ok "..top.counter.." require "..module)
+      io.stdout:write("not ok "..top.counter.." require "..module.."\n")
       self:diag(reason)
       return nil
    end
