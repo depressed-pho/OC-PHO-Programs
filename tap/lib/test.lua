@@ -6,7 +6,7 @@ function test.new()
    local self = setmetatable({}, test)
 
    self.subtests = {}
-   self._push()
+   self:_push()
 
    return self
 end
@@ -62,7 +62,7 @@ function test:diag(msg)
    if type(msg) == "table" then
       self:diag(serialization.serialize(msg, true))
    else
-      for line in string.gmatch(msg, "([^\n]*)\n?") do
+      for line in string.gmatch(msg, "([^\n]+)") do
          io.stderr:write("# "..line.."\n")
       end
    end

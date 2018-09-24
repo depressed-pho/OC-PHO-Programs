@@ -181,3 +181,22 @@ function result.bailOut:as_string()
 end
 
 return result
+
+-- unknown
+result.unknown = setmetatable({}, result)
+result.unknown.__index = result.unknown
+
+function result.unknown.new(line)
+   local self = result.new("unknown")
+   setmetatable(self, result.unknown)
+
+   self.line = line
+
+   return self
+end
+
+function result.unknown:as_string()
+   return line
+end
+
+return result
