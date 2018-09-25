@@ -19,7 +19,4 @@ t:livesAnd(
 t:diesOK(function () m:unlock() end, 'm:unlock() dies when m is unlocked')
 
 -- Locking an unlocked mutex should instantly succeed.
-t:livesAnd(
-   function ()
-      t:is(m:lock(), true)
-   end, 'm:lock() succeeds when m is unlocked')
+t:is(m:lock(), true, 'm:lock() succeeds when m is unlocked')
