@@ -123,7 +123,7 @@ function statistics.forFile:finished()
       -- If the number of the last executed test doesn't match the
       -- plan, it should be considered to be a failure.
       if self.lastNumber ~= self.planned then
-         table.insert(self.failed, self.planned.." tests planned but ran "..self.lastNumber)
+         table.insert(self.failed, "Planned " .. self.planned.." tests but ran "..self.lastNumber..".")
       end
    end
 end

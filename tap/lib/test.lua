@@ -27,13 +27,17 @@ function test:_top()
    return self.subtests[#self.subtests]
 end
 
+function test:indent()
+   return string.rep("    ", #self.subtests - 1)
+end
+
 function test:plan(numTests)
    local top = self:_top()
    if top.plan then
       error("Tests already have a plan: "..top.plan)
    else
       top.plan = numTests
-      io.stdout:write("1.."..numTests.."\n")
+      io.stdout:write(self:indent().."1.."..numTests.."\n")
    end
 end
 
@@ -42,9 +46,9 @@ function test:ok(ok, description)
    top.counter = top.counter + 1
 
    if ok then
-      io.stdout:write("ok ")
+      io.stdout:write(self:indent().."ok ")
    else
-      io.stdout:write("not ok ")
+      io.stdout:write(self:indent().."not ok ")
    end
 
    io.stdout:write(top.counter)
@@ -56,14 +60,17 @@ function test:ok(ok, description)
    end
 
    if not ok then
-      io.stderr:write("#   Failed test ")
+      local msg = "  Failed test "
       if description then
-         io.stderr:write("`"..description.."'\n")
-         io.stderr:write("#   ")
+         msg = msg.."`"..description.."'\n"
+         msg = msg.."  "
       end
       local file, line = self:_calledAt()
-      io.stderr:write("in "..file.." at line "..line..".\n")
+      msg = msg.."in "..file.." at line "..line.."."
+      self:diag(msg)
    end
+
+   return ok
 end
 
 -- Find out the first function outside of this module.
@@ -87,7 +94,6 @@ end
 function test:requireOK(module)
    local ok, result, reason = xpcall(require, debug.traceback, module)
    self:ok(ok, "require "..module)
-
    if ok then
       return result
    else
@@ -130,6 +136,20 @@ function test:diesOK(thunk, description)
    return result
 end
 
+function test:is(got, expected, description)
+   if not self:ok(got == expected, description) then
+      self:diag("         got: "..serialization.serialize(got     , true))
+      self:diag("    expected: "..serialization.serialize(expected, true))
+   end
+end
+
+function test:isnt(got, unexpected, description)
+   if not self:ok(got ~= unexpected, description) then
+      self:diag("         got: "..serialization.serialize(got, true))
+      self:diag("    expected: anything else")
+   end
+end
+
 function test:bailOut(reason) -- luacheck: ignore self
    io.stdout:write("Bail out!")
    if reason then
@@ -143,7 +163,7 @@ function test:diag(msg)
       self:diag(serialization.serialize(msg, true))
    else
       for line in string.gmatch(msg, "([^\n]+)") do
-         io.stderr:write("# "..line.."\n")
+         io.stderr:write(self:indent().."# "..line.."\n")
       end
    end
 end
