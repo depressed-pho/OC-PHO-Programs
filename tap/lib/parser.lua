@@ -43,14 +43,14 @@ local function _parse(line)
    end
 
    local goodNum, goodTail =
-      string.match(line, "^%s*ok%s+(%d+)%s+(.*)$")
+      string.match(line, "^%s*ok%s+(%d+)%s*(.*)$")
    if goodNum then
       local desc, dir = _parseDescAndDir(goodTail)
       return result.test.new(true, tonumber(goodNum), desc, dir)
    end
 
    local badNum, badTail =
-      string.match(line, "^%s*not%s+ok%s+(%d+)%s+(.*)$")
+      string.match(line, "^%s*not%s+ok%s+(%d+)%s*(.*)$")
    if badNum then
       local desc, dir = _parseDescAndDir(badTail)
       return result.test.new(false, tonumber(badNum), desc, dir)

@@ -71,7 +71,17 @@ function test:livesAnd(thunk, description)
    local top = self:_top()
    local ctr = top.counter
 
+   -- While evaluating the thunk we have to replace test:ok() so it
+   -- uses the description passed to this function. This assumes
+   -- functions like is() all use ok() ultimately.
+   local savedOK     = self.ok
+   local savedRealOK = rawget(self, "ok") -- expected to be nil
+   self.ok = function (ok)
+      return savedOK(self, ok, description)
+   end
    local ok, result, reason = xpcall(thunk, debug.traceback, module)
+   self.ok = savedRealOK
+
    if ok then
       if top.counter == ctr + 1 then
          return result
