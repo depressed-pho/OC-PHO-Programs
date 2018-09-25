@@ -13,3 +13,7 @@ t:livesAnd(
       m = mutex.new()
       t:ok(m ~= nil)
    end, 'mutex.new()')
+
+-- See if m:unlock() raises an error because it's not locked by the
+-- current thread in the first place.
+t:diesOK(function () m:unlock() end, 'm:unlock() dies when unlocked')

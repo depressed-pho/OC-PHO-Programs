@@ -59,6 +59,7 @@ end
 function test:requireOK(module)
    local ok, result, reason = xpcall(require, debug.traceback, module)
    self:ok(ok, "require "..module)
+
    if ok then
       return result
    else
@@ -79,7 +80,7 @@ function test:livesAnd(thunk, description)
    self.ok = function (ok)
       return savedOK(self, ok, description)
    end
-   local ok, result, reason = xpcall(thunk, debug.traceback, module)
+   local ok, result, reason = xpcall(thunk, debug.traceback)
    self.ok = savedRealOK
 
    if ok then
@@ -93,6 +94,12 @@ function test:livesAnd(thunk, description)
       self:ok(false, description)
       self:diag(reason)
    end
+end
+
+function test:diesOK(thunk, description)
+   local ok, result, _ = xpcall(thunk, debug.traceback)
+   self:ok(not ok, description)
+   return result
 end
 
 function test:bailOut(reason) -- luacheck: ignore self
