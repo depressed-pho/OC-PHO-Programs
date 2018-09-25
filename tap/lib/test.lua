@@ -162,9 +162,11 @@ function test:diag(msg)
    if type(msg) == "table" then
       self:diag(serialization.serialize(msg, true))
    else
-      for line in string.gmatch(msg, "([^\n]+)") do
+      local function onLine(line)
          io.stderr:write(self:indent().."# "..line.."\n")
+         return ""
       end
+      string.gsub(msg, "(.-)\n?", onLine)
    end
 end
 
