@@ -67,15 +67,15 @@ function test:ok(ok, description)
 end
 
 -- Find out the first function outside of this module.
-local shortSourceOfMe = debug.getinfo(1, "S").short_source
-assert(shortSourceOfMe)
+local shortSrcOfMe = debug.getinfo(1, "S").short_src
+assert(shortSrcOfMe)
 function test:_calledAt() -- luacheck: ignore self
    local i = 1
    while true do
       local frame = debug.getinfo(i, "Sl")
       if frame then
-         if frame.short_source ~= shortSourceOfMe then
-            return frame.short_source, frame.currentline
+         if frame.short_src ~= shortSrcOfMe then
+            return frame.short_src, frame.currentline
          end
       else
          return "(unknown)", 0
