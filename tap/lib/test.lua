@@ -54,6 +54,33 @@ function test:ok(ok, description)
    else
       io.stdout:write("\n")
    end
+
+   if not ok then
+      io.stderr:write("#   Failed test ")
+      if description then
+         io.stderr:write("`"..description.."'\n")
+         io.stderr:write("#   ")
+      end
+      local file, line = self:_calledAt()
+      io.stderr:write("in "..file.." at line "..line..".\n")
+   end
+end
+
+-- Find out the first function outside of this module.
+local shortSourceOfMe = debug.getinfo(1, "S").short_source
+assert(shortSourceOfMe)
+function test:_calledAt() -- luacheck: ignore self
+   local i = 1
+   while true do
+      local frame = debug.getinfo(i, "Sl")
+      if frame then
+         if frame.short_source ~= shortSourceOfMe then
+            return frame.short_source, frame.currentline
+         end
+      else
+         return "(unknown)", 0
+      end
+   end
 end
 
 function test:requireOK(module)
