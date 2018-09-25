@@ -77,6 +77,7 @@ function test:_calledAt() -- luacheck: ignore self
          if frame.short_src ~= shortSrcOfMe then
             return frame.short_src, frame.currentline
          end
+         i = i + 1
       else
          return "(unknown)", 0
       end
@@ -104,7 +105,7 @@ function test:livesAnd(thunk, description)
    -- functions like is() all use ok() ultimately.
    local savedOK     = self.ok
    local savedRealOK = rawget(self, "ok") -- expected to be nil
-   self.ok = function (ok)
+   self.ok = function (self, ok) -- luacheck: ignore self
       return savedOK(self, ok, description)
    end
    local ok, result, reason = xpcall(thunk, debug.traceback)
