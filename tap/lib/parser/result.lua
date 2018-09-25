@@ -38,7 +38,7 @@ function result:hasTodo() -- luacheck: ignore self
    return false
 end
 
-function result:as_string() -- luacheck: ignore self
+function result:tostring() -- luacheck: ignore self
    error("This method has to be overridden")
 end
 
@@ -55,7 +55,7 @@ function result.version.new(version)
    return self
 end
 
-function result.version:as_string()
+function result.version:tostring()
    return "TAP version "..self.version
 end
 
@@ -89,7 +89,7 @@ function result:reason()
    return self.directive.skip
 end
 
-function result.plan:as_string()
+function result.plan:tostring()
    local str = "1.."..self.planned
    if self.directive.skip then
       str = str.." # SKIP "..self.directive.skip
@@ -133,7 +133,7 @@ function result.test:reason()
    return self.directive.skip
 end
 
-function result.test:as_string()
+function result.test:tostring()
    local str = ""
 
    if not self.ok then
@@ -172,7 +172,7 @@ function result.bailOut:reason()
    return self.reason
 end
 
-function result.bailOut:as_string()
+function result.bailOut:tostring()
    local str = "Bail out!"
    if #self.reason > 0 then
       str = str.." "..self.reason
@@ -193,7 +193,7 @@ function result.unknown.new(line)
    return self
 end
 
-function result.unknown:as_string()
+function result.unknown:tostring()
    return self.line
 end
 

@@ -12,8 +12,8 @@ SYNOPSIS
     m:unlock()
 
     -- Acquire and release shared ownership.
-    m:lock_shared()
-    m:unlock_shared()
+    m:lockShared()
+    m:unlockShared()
 
 DESCRIPTION
     This module provides a multiple-reader, single-writer mutex.
@@ -41,10 +41,10 @@ METHODS
     m:unlock(): void
         Release exclusive ownership owned by the current thread.
 
-    m:lock_shared([timeout: number]): boolean
+    m:lockShared([timeout: number]): boolean
         Like m:lock() but instead acquire shared ownership.
 
-    m:unlock_shared()
+    m:unlockShared()
         Like :unlock() but instead release shared ownership.
 
 SEE ALSO

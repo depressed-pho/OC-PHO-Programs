@@ -46,7 +46,7 @@ function harness:_runTest(stats, file)
    self:_write(-1, io.stdout, file.." ... ")
 
    for r in parser(pipe) do
-      self:_write(1, io.stdout, r:as_string())
+      self:_write(1, io.stdout, r:tostring())
 
       if r:isPlan() then
          if r:hasSkip() then
@@ -76,7 +76,7 @@ function harness:_runTest(stats, file)
          stats:bailOut(file, r:reason())
 
          if self.verbosity == 0 and self.isTTY then
-            io.stdout:write(r:as_string())
+            io.stdout:write(r:tostring())
          end
       end
    end

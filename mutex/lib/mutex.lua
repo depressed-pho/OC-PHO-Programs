@@ -42,7 +42,7 @@ function mutex:lock(timeout) -- nil | number
       -- No one has exclusive ownership on it. But what about shared
       -- ones?
       if self:_hasSharedOwnersExcept(me) then
-         return self:_wait_unlock_then(
+         return self:_waitUnlockThen(
             timeout,
             function (remaining)
                return self:lock(remaining)
@@ -60,7 +60,7 @@ function mutex:lock(timeout) -- nil | number
 
    else
       -- Someone else has exclusive ownership on it.
-      return self:_wait_unlock_then(
+      return self:_waitUnlockThen(
          timeout,
          function (remaining)
             return self:lock(remaining)
@@ -77,7 +77,7 @@ function mutex:_hasSharedOwnersExcept(thr) -- thread | "init"
    return false
 end
 
-function mutex:_wait_unlock_then(timeout, cont) -- (timeout) -> any
+function mutex:_waitUnlockThen(timeout, cont) -- (timeout) -> any
    local started = computer.uptime()
    while true do
       local ev, id = event.pull(timeout, "mutex.unlocked")
@@ -111,7 +111,7 @@ function mutex:unlock()
 end
 
 -- Like :lock() but instead acquire shared ownership.
-function mutex:lock_shared(timeout)
+function mutex:lockShared(timeout)
    local me = thread.current() or "init"
 
    if not self.exOwner or self.exOwner == me then
@@ -128,16 +128,16 @@ function mutex:lock_shared(timeout)
 
    else
       -- Someone else has exclusive ownership on it.
-      return self:_wait_unlock_then(
+      return self:_waitUnlockThen(
          timeout,
          function (remaining)
-            return self:lock_shared(remaining)
+            return self:lockShared(remaining)
          end)
    end
 end
 
 -- Like :unlock() but instead release shared ownership.
-function mutex:unlock_shared()
+function mutex:unlockShared()
    local me = thread.current() or "init"
 
    local level = self.shOwners[me]

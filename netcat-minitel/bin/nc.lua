@@ -24,7 +24,7 @@ local function printHelp(cmd)
         Connection timeout in seconds]])
 end
 
-local function protected_main(opts)
+local function protectedMain(opts)
    local sock -- buffer
    if opts.unreliable then
       -- FIXME
@@ -117,7 +117,7 @@ local function main(...)
    }
    net.mtu         = opts.mtu
    net.streamdelay = opts.wait
-   local ok, result, reason = xpcall(protected_main, debug.traceback, opts)
+   local ok, result, reason = xpcall(protectedMain, debug.traceback, opts)
    net.mtu         = saved.mtu
    net.streamdelay = saved.streamdelay
    if not ok then

@@ -69,7 +69,7 @@ end
 -- you can use it in a for loop like this:
 --
 --    for result in parser(io.stdin) do
---        print(result:as_string())
+--        print(result:tostring())
 --    end
 local function parser(source)
    return function ()
