@@ -1,6 +1,6 @@
 local test  = require("tap/test")
 local t     = test.new()
-t:plan(4)
+t:plan(3)
 
 -- The mutex module should be able to be loaded.
 local mutex = t:requireOK("mutex") or t:bailOut("Can't load mutex")
@@ -14,9 +14,17 @@ t:livesAnd(
       t:isnt(m, nil)
    end, 'mutex.new() should return non-nil')
 
--- m:unlock() should raise an error because it's not locked by the
--- current thread in the first place.
-t:diesOK(function () m:unlock() end, 'm:unlock() dies when m is unlocked')
+t:subtest(
+    'single thread lock/unlock',
+    function ()
+        t:plan(4)
 
--- Locking an unlocked mutex should instantly succeed.
-t:is(m:lock(), true, 'm:lock() succeeds when m is unlocked')
+        t:is(m:lock(), true, 'm:lock() succeeds when m is unlocked')
+        t:is(m:lock(), true, 'm:lock() also succeeds when the caller already has an ownership')
+        t:livesOK(
+            function ()
+                m:unlock()
+                m:unlock()
+            end, 'm:unlock() succeeds when the caller has an ownership')
+        t:diesOK(function () m:unlock() end, 'm:unlock() dies when m is unlocked')
+    end)
