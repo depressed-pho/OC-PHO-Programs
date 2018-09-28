@@ -22,6 +22,10 @@ function result:isTest()
    return self.type == "test"
 end
 
+function result:isComment()
+   return self.type == "comment"
+end
+
 function result:isBailOut()
    return self.type == "bailOut"
 end
@@ -163,21 +167,42 @@ function result.bailOut.new(reason)
    local self = result.new("bailOut")
    setmetatable(self, result.bailOut)
 
-   self.reason = reason
+   self.r = reason
 
    return self
 end
 
 function result.bailOut:reason()
-   return self.reason
+   return self.r
 end
 
 function result.bailOut:tostring()
    local str = "Bail out!"
-   if #self.reason > 0 then
-      str = str.." "..self.reason
+   if #self.r > 0 then
+      str = str.." "..self.r
    end
    return str
+end
+
+-- comment
+result.comment = setmetatable({}, result)
+result.comment.__index = result.comment
+
+function result.comment.new(comment)
+    local self = result.new("comment")
+    setmetatable(self, result.comment)
+
+    self.comm = comment
+
+    return self
+end
+
+function result.comment:comment()
+    return self.comm
+end
+
+function result.comment:tostring()
+    return "# "..self.comm
 end
 
 -- unknown

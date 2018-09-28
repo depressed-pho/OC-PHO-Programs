@@ -38,6 +38,8 @@ function test:indent()
 end
 
 function test:plan(numTests)
+    checkArg(1, numTests, "number")
+
     local top = self:_top()
     if top.plan then
         error("Tests already have a plan: "..top.plan)
@@ -47,18 +49,25 @@ function test:plan(numTests)
     end
 end
 
-function test:subtest(_name, thunk) -- luacheck: ignore _name
+function test:subtest(name, thunk)
+    checkArg(1, name , "string"  )
+    checkArg(2, thunk, "function")
+
     -- A subtest is also a test, which is why we increment the counter
     -- here.
     local top = self:_top()
     top.counter = top.counter + 1
 
     self:_push()
+    self:note("Subtest: "..name)
     thunk()
     self:_pop()
 end
 
 function test:ok(ok, description)
+    checkArg(1, ok         , "boolean")
+    checkArg(2, description, "string", "nil")
+
     local top = self:_top()
     if self:_isRoot() and not top.plan then
         error("Due to a current limitation in the library, subtests have to "..
@@ -113,6 +122,8 @@ function test:_calledAt() -- luacheck: ignore self
 end
 
 function test:requireOK(module)
+    checkArg(1, module, "string")
+
     local ok, result, reason = xpcall(require, debug.traceback, module)
     self:ok(ok, "require "..module)
     if ok then
@@ -124,6 +135,9 @@ function test:requireOK(module)
 end
 
 function test:livesAnd(thunk, description)
+    checkArg(1, thunk      , "function")
+    checkArg(2, description, "string", "nil")
+
     local top = self:_top()
     local ctr = top.counter
 
@@ -152,6 +166,9 @@ function test:livesAnd(thunk, description)
 end
 
 function test:livesOK(thunk, description)
+    checkArg(1, thunk      , "function")
+    checkArg(2, description, "string", "nil")
+
     local ok, result, reason = xpcall(thunk, debug.traceback)
     if self:ok(ok, description) then
         return result
@@ -162,12 +179,17 @@ function test:livesOK(thunk, description)
 end
 
 function test:diesOK(thunk, description)
+    checkArg(1, thunk      , "function")
+    checkArg(2, description, "string", "nil")
+
     local ok, result, _ = xpcall(thunk, debug.traceback)
     self:ok(not ok, description)
     return result
 end
 
 function test:is(got, expected, description)
+    checkArg(3, description, "string", "nil")
+
     if not self:ok(got == expected, description) then
         self:diag("         got: "..serialization.serialize(got     , true))
         self:diag("    expected: "..serialization.serialize(expected, true))
@@ -175,13 +197,42 @@ function test:is(got, expected, description)
 end
 
 function test:isnt(got, unexpected, description)
+    checkArg(3, description, "string", "nil")
+
     if not self:ok(got ~= unexpected, description) then
         self:diag("         got: "..serialization.serialize(got, true))
         self:diag("    expected: anything else")
     end
 end
 
+local cmpOps = {
+    ['==' ] = function (a, b) return a ==  b end,
+    ['~=' ] = function (a, b) return a ~=  b end,
+    ['<'  ] = function (a, b) return a <   b end,
+    ['<=' ] = function (a, b) return a <=  b end,
+    ['>'  ] = function (a, b) return a >   b end,
+    ['>=' ] = function (a, b) return a >=  b end,
+    ['and'] = function (a, b) return a and b end,
+    ['or' ] = function (a, b) return a or  b end
+}
+function test:cmpOK(valueA, op, valueB, description)
+    checkArg(3, description, "string", "nil")
+
+    local f = cmpOps[op]
+    if not f then
+        error("Unknown operator `"..op.."'")
+    end
+
+    if not self:ok(f(valueA, valueB), description) then
+        self:diag("    "..serialization.serialize(valueA, true))
+        self:diag("        "..op)
+        self:diag("    "..serialization.serialize(valueB, true))
+    end
+end
+
 function test:bailOut(reason) -- luacheck: ignore self
+    checkArg(3, reason, "string", "nil")
+
     io.stdout:write("Bail out!")
     if reason then
         io.stdout:write(" "..reason.."\n")
@@ -189,15 +240,44 @@ function test:bailOut(reason) -- luacheck: ignore self
     os.exit(255)
 end
 
-function test:diag(msg)
-    if type(msg) == "table" then
-        self:diag(serialization.serialize(msg, true))
-    else
-        local function onLine(line)
-            io.stderr:write(self:indent().."# "..line.."\n")
-            return ""
+-- THINKME: Move this to a separate library?
+local function split(str, sepPat)
+    local idx = 1
+    return function ()
+        if idx then
+            local from, to = str:find(sepPat, idx)
+            if from then
+                local seg = str:sub(idx, from - 1)
+                idx = to + 1
+                return seg
+            else
+                local seg = str:sub(idx)
+                idx = nil
+                return seg
+            end
+        else
+            return nil
         end
-        string.gsub(msg, "(.-)\n?", onLine)
+    end
+end
+
+function test:diag(msg)
+    if type(msg) == "string" then
+        for line in split(msg, "\n") do
+            io.stderr:write(self:indent().."# "..line.."\n")
+        end
+    else
+        self:diag(serialization.serialize(msg, true))
+    end
+end
+
+function test:note(msg)
+    if type(msg) == "string" then
+        for line in split(msg, "\n") do
+            io.stdout:write(self:indent().."# "..line.."\n")
+        end
+    else
+        self:note(serialization.serialize(msg, true))
     end
 end
 
