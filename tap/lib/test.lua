@@ -42,7 +42,7 @@ function test:plan(numTests)
 
     local top = self:_top()
     if top.plan then
-        error("Tests already have a plan: "..top.plan)
+        error("Tests already have a plan: "..top.plan, 2)
     else
         top.plan = numTests
         io.stdout:write(self:indent().."1.."..numTests.."\n")
@@ -58,8 +58,8 @@ function test:subtest(name, thunk)
     local top = self:_top()
     top.counter = top.counter + 1
 
-    self:_push()
     self:note("Subtest: "..name)
+    self:_push()
     thunk()
     self:_pop()
 end
@@ -71,7 +71,7 @@ function test:ok(ok, description)
     local top = self:_top()
     if self:_isRoot() and not top.plan then
         error("Due to a current limitation in the library, subtests have to "..
-                  "declare a plan before doing any tests.")
+                  "declare a plan before doing any tests.", 2)
     end
     top.counter = top.counter + 1
 
@@ -103,15 +103,14 @@ function test:ok(ok, description)
     return ok
 end
 
--- Find out the first function outside of this module.
-local shortSrcOfMe = debug.getinfo(1, "S").short_src
-assert(shortSrcOfMe)
+-- Find out the first module/line outside of tap/test.
 function test:_calledAt() -- luacheck: ignore self
-    local i = 1
+    local i = 2
     while true do
         local frame = debug.getinfo(i, "Sl")
         if frame then
-            if frame.short_src ~= shortSrcOfMe then
+            if (frame.short_src:find("%.lua$") and
+                not frame.short_src:find("/tap/test%.lua$")) then
                 return frame.short_src, frame.currentline
             end
             i = i + 1
@@ -124,12 +123,12 @@ end
 function test:requireOK(module)
     checkArg(1, module, "string")
 
-    local ok, result, reason = xpcall(require, debug.traceback, module)
+    local ok, result = pcall(require, module)
     self:ok(ok, "require "..module)
     if ok then
         return result
     else
-        self:diag(reason)
+        self:diag(result)
         return nil
     end
 end
@@ -149,7 +148,7 @@ function test:livesAnd(thunk, description)
     self.ok = function (self, ok) -- luacheck: ignore self
         return savedOK(self, ok, description)
     end
-    local ok, result, reason = xpcall(thunk, debug.traceback)
+    local ok, result = xpcall(thunk, debug.traceback)
     self.ok = savedRealOK
 
     if ok then
@@ -157,11 +156,11 @@ function test:livesAnd(thunk, description)
             return result
         else
             error("Misuse of test:livesAnd(): there must be one and "..
-                      "only one predicate in the thunk.")
+                      "only one predicate in the thunk.", 2)
         end
     else
         self:ok(false, description)
-        self:diag(reason)
+        self:diag(result)
     end
 end
 
@@ -169,11 +168,11 @@ function test:livesOK(thunk, description)
     checkArg(1, thunk      , "function")
     checkArg(2, description, "string", "nil")
 
-    local ok, result, reason = xpcall(thunk, debug.traceback)
+    local ok, result = xpcall(thunk, debug.traceback)
     if self:ok(ok, description) then
         return result
     else
-        self:diag(reason)
+        self:diag(result)
         return nil
     end
 end
@@ -205,6 +204,88 @@ function test:isnt(got, unexpected, description)
     end
 end
 
+function test:pass(description)
+    checkArg(1, description, "string", "nil")
+
+    self:ok(true, description)
+end
+
+function test:fail(description)
+    checkArg(1, description, "string", "nil")
+
+    self:ok(false, description)
+end
+
+local function _isDeeply(stk)
+    local a = stk[#stk].a
+    local b = stk[#stk].b
+    local t = type(a)
+
+    if t ~= type(b) then
+        return false
+
+    elseif t == "nil" or t == "number" or t == "string" or t == "boolean" then
+        return a == b
+
+    elseif t == "table" then
+        -- See if we are already evaluating the same "a" or "b". Doing
+        -- it again would end up in an infinite loop.
+        for i, ent in ipairs(stk) do
+            -- If "a" has a circular reference, the only way to test
+            -- the equality is to compare the previous "b" shallowly
+            -- with the current "b". Of course this may lead to a
+            -- false negative but it's better than non-termination.
+            if i < #stk then
+                if a == ent.a then
+                    return b == ent.b
+                elseif b == ent.b then
+                    return a == ent.a
+                end
+            end
+        end
+
+        local keySet = {}
+        for k, _ in pairs(a) do keySet[k] = 1 end
+        for k, _ in pairs(b) do keySet[k] = 1 end
+
+        for k, _ in pairs(keySet) do
+            table.insert(stk, {idx = k, a = a[k], b = b[k]})
+            if _isDeeply(stk) then
+                table.remove(stk)
+            else
+                return false
+            end
+        end
+        return true
+    else
+        error("Unknown type: "..t, 2)
+    end
+end
+
+local function _formatDeepStack(stk)
+    local ref = ""
+    for _, ent in ipairs(stk) do
+        if ent.idx then
+            ref = ref.."["..serialization.serialize(ent.idx, true).."]"
+        end
+    end
+    return "    Structures begin differing at:\n"..
+        "           got"..ref.." = "..serialization.serialize(stk[#stk].a).."\n"..
+        "      expected"..ref.." = "..serialization.serialize(stk[#stk].b).."\n"
+end
+
+function test:isDeeply(got, expected, description)
+    checkArg(3, description, "string", "nil")
+
+    local stack = { {idx = nil, a = got, b = expected} }
+    if _isDeeply(stack) then
+        self:pass(description)
+    else
+        self:fail(description)
+        self:diag(_formatDeepStack(stack))
+    end
+end
+
 local cmpOps = {
     ['==' ] = function (a, b) return a ==  b end,
     ['~=' ] = function (a, b) return a ~=  b end,
@@ -220,7 +301,7 @@ function test:cmpOK(valueA, op, valueB, description)
 
     local f = cmpOps[op]
     if not f then
-        error("Unknown operator `"..op.."'")
+        error("Unknown operator `"..op.."'", 2)
     end
 
     if not self:ok(f(valueA, valueB), description) then
@@ -231,7 +312,7 @@ function test:cmpOK(valueA, op, valueB, description)
 end
 
 function test:bailOut(reason) -- luacheck: ignore self
-    checkArg(3, reason, "string", "nil")
+    checkArg(1, reason, "string", "nil")
 
     io.stdout:write("Bail out!")
     if reason then
@@ -280,5 +361,7 @@ function test:note(msg)
         self:note(serialization.serialize(msg, true))
     end
 end
+
+-- FIXME: Implement SKIP and TODO emitters
 
 return test

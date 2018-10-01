@@ -2,8 +2,8 @@ local net     = require("minitel")
 local options = require("netcat-minitel/options")
 
 local function printHelp(cmd)
-   print("Usage: "..cmd.." [options] [HOST PORT | -l PORT]")
-   print([[
+    print("Usage: "..cmd.." [options] [HOST PORT | -l PORT]")
+    print([[
     -h, --help
         Display this message
     -u, --unreliable
@@ -25,106 +25,108 @@ local function printHelp(cmd)
 end
 
 local function protectedMain(opts)
-   local sock -- buffer
-   if opts.unreliable then
-      -- FIXME
-   elseif opts.reliable then
-      -- FIXME
-   elseif opts.ordered then
-      -- FIXME
-   else
-      if opts.listen then
-         local server = require("netcat-minitel/buffer/stream/server")
-         sock = server.open(opts.port)
-      else
-         -- FIXME
-      end
-   end
+    -- luacheck: ignore
 
-   -- We need to read from two sources at the same time, a socket and
-   -- stdin. And since buffer:read() is a blocking call, we spawn 2
-   -- threads for them.
+    local sock -- buffer
+    if opts.unreliable then
+        -- FIXME
+    elseif opts.reliable then
+        -- FIXME
+    elseif opts.ordered then
+        -- FIXME
+    else
+        if opts.listen then
+            local server = require("netcat-minitel/buffer/stream/server")
+            sock = server.open(opts.port)
+        else
+            -- FIXME
+        end
+    end
+
+    -- We need to read from two sources at the same time, a socket and
+    -- stdin. And since buffer:read() is a blocking call, we spawn 2
+    -- threads for them.
 end
 
 local function main(...)
-   local optsDesc = {
-      help       = "h",
-      unreliable = "u",
-      reliable   = "r",
-      ordered    = "d",
-      verbose    = "v",
-      listen     = "l",
-      output     = true, -- takes an argument
-      mtu        = true,
-      wait       = true
-   }
-   local cmd = "nc"
-   local args, opts = options.parse(optsDesc, cmd, ...)
+    local optsDesc = {
+        help       = "h",
+        unreliable = "u",
+        reliable   = "r",
+        ordered    = "d",
+        verbose    = "v",
+        listen     = "l",
+        output     = true, -- takes an argument
+        mtu        = true,
+        wait       = true
+    }
+    local cmd = "nc"
+    local args, opts = options.parse(optsDesc, cmd, ...)
 
-   if not opts then
-      printHelp(cmd)
-      return 1
+    if not opts then
+        printHelp(cmd)
+        return 1
 
-   elseif opts.help then
-      printHelp(cmd)
-      return 0
+    elseif opts.help then
+        printHelp(cmd)
+        return 0
 
-   else
-      if opts.listen then
-         if #args ~= 1 or tonumber(args[1]) == nil then
+    else
+        if opts.listen then
+            if #args ~= 1 or tonumber(args[1]) == nil then
+                printHelp(cmd)
+                return 1
+            end
+            opts.port = tonumber(args[1])
+
+        else
+            if #args ~= 2 or tonumber(args[2]) == nil then
+                printHelp(cmd)
+                return 1
+            end
+            opts.host = args[1]
+            opts.port = tonumber(args[2])
+        end
+    end
+
+    if opts.mtu then
+        if tonumber(opts.mtu) == nil then
             printHelp(cmd)
             return 1
-         end
-         opts.port = tonumber(args[1])
+        else
+            opts.mtu = tonumber(opts.mtu)
+        end
+    else
+        opts.mtu = net.mtu
+    end
 
-      else
-         if #args ~= 2 or tonumber(args[2]) == nil then
+    if opts.wait then
+        if tonumber(opts.wait) == nil then
             printHelp(cmd)
             return 1
-         end
-         opts.host = args[1]
-         opts.port = tonumber(args[2])
-      end
-   end
+        else
+            opts.wait = tonumber(opts.wait)
+        end
+    else
+        opts.wait = net.streamdelay
+    end
 
-   if opts.mtu then
-      if tonumber(opts.mtu) == nil then
-         printHelp(cmd)
-         return 1
-      else
-         opts.mtu = tonumber(opts.mtu)
-      end
-   else
-      opts.mtu = net.mtu
-   end
+    -- Now we are going to modify global parameters of minitel. Take
+    -- extra care to restore them even when something goes wrong.
+    local saved = {
+        mtu         = net.mtu,
+        streamdelay = net.streamdelay
+    }
+    net.mtu          = opts.mtu
+    net.streamdelay  = opts.wait
+    local ok, result = xpcall(protectedMain, debug.traceback, opts)
+    net.mtu          = saved.mtu
+    net.streamdelay  = saved.streamdelay
+    if not ok then
+        error(result, 0)
+    end
 
-   if opts.wait then
-      if tonumber(opts.wait) == nil then
-         printHelp(cmd)
-         return 1
-      else
-         opts.wait = tonumber(opts.wait)
-      end
-   else
-      opts.wait = net.streamdelay
-   end
-
-   -- Now we are going to modify global parameters of minitel. Take
-   -- extra care to restore them even when something goes wrong.
-   local saved = {
-      mtu         = net.mtu,
-      streamdelay = net.streamdelay
-   }
-   net.mtu         = opts.mtu
-   net.streamdelay = opts.wait
-   local ok, result, reason = xpcall(protectedMain, debug.traceback, opts)
-   net.mtu         = saved.mtu
-   net.streamdelay = saved.streamdelay
-   if not ok then
-      error(reason, 0)
-   end
-
-   return result
+    return result
 end
 
 return main(...)

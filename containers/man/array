@@ -1,0 +1,170 @@
+NAME
+    containers/array -- Array that sucks less than Lua sequences
+
+SYNOPSIS
+    local array = require("containers/array")
+
+    -- Create an empty array
+    local arr = array.new()
+
+    -- Insert elements at the end. nil is also a valid element.
+    arr:push(1)
+    arr:push(nil)
+
+    -- Iterate over each element of the array.
+    for e in arr:values() do
+        print(e)
+    end
+    -- ..prints '1' and 'nil'
+
+DESCRIPTION
+    This module provides an array class with a quite rich set of
+    methods to manipulate arrays. Unlike Lua sequences, a nil value is
+    also a valid element of arrays.
+
+CONSTRUCTORS
+    array.new(...): array
+        Create a new array. Optional arguments are the initial
+        elements of the array.
+
+    array.from(t: table): array
+    array.from(itr: function): array
+        Create an array by shallow-copying a sequence, or iterating
+        through an iterator. The iterator is supposed to generate
+        pairs of (i, v) where i is the index and v is the value.
+
+METHODS
+  BASIC METHODS
+
+    arr:get(n: number): any
+        Get the n-th element of the array. The index n starts from
+        1. An error is thrown if the index is out of range.
+
+    arr:set(idx: number, x: value): self
+        Set the n-th element of the array to the given value. An error
+        is thrown if the index is out of range.
+
+    arr:length(): number
+        Return the length of the array.
+
+    arr:table(): table
+        Return the shallow copy of the array as a sequence. The method
+        also sets the "n" field just like the builtin table.pack().
+
+    arr:clone(): array
+        Return a shallow copy of the array.
+
+    arr:concat(xs: array): self
+        Return a shallow copy of the array with another array "xs"
+        appended to the end.
+
+    arr:values(): function
+        Return an iterator which generates pairs of (i, v) where i is
+        the index and v is the value.
+
+  ARRAY TRANSFORMATIONS
+
+    arr:map(f: (v: any, i: number, a: array)->any): array
+        Map a function over all the elements of the array, and return
+        a new array consisting of the resulting values. The function f
+        is called with 3 arguments: the element, its index, and the
+        array itself.
+
+    arr:concatMap(f: (v: any, i: number, a: array)->array): array
+        Map a function over all the elements of the array, and
+        concatenate the resulting arrays.
+
+    arr:reverse(): array
+        Return the elements of the array in reverse order.
+
+    arr:sort([cmpLE: (any, any)->boolean]): array
+        Return a shallow copy of the array with elements sorted. This
+        is a stable sort, unlike the builtin function
+        table.sort(). The optional argument cmpLE, if given, is used
+        as the order. It takes 2 elements and is supposed to return
+        true iff the first one is less than or equal to the second
+        one.
+
+  ARRAY MUTATIONS
+
+    arr:push(...): self
+        Insert values at the end of the array.
+
+    arr:unshift(...): self
+        Insert values at the beginning of the array.
+
+    arr:pop(): any
+        Remove and return the last element of the array. An error is
+        thrown if the array is empty.
+
+    arr:shift(): any
+        Remove and the first element of the array, and return it. An
+        error is thrown if the array is empty.
+
+    arr:splice(start: number, count: number|nil, ...): self
+        Remove "count" number of elements starting from the index
+        "start", and insert any of the resulting arguments at the
+        index. The argument "count" is optional, and is defaulted to
+        0. An error is thrown if "start" is less than 1, but if it is
+        greater than the last index of the elements, it is interpreted
+        as the end of the array.
+
+  SUB-ARRAYS
+
+    arr:slice(s: number, e: number|nil): array
+        Return a part of the array. The argument s is the starting
+        index, and must be greater than 0. The optional argument e, if
+        given, is the ending index.
+
+  FOLDING ARRAYS
+
+    arr:foldl(op: (any, any)->any[, init: any]): any
+        Left-associative fold of the array. The optional argument
+        init, if given, is used as the initial value of the
+        reduction. An error is thrown if the array is empty and no
+        initial value is supplied.
+
+    arr:foldr(op: (any, any)->any[, init: any]): any
+        Right-associative fold of the array.
+
+  SPECIAL FOLDS
+
+    arr:all(p: (v: any, i: number, a: array)->boolean): boolean
+        Apply a predicate function p to each value of the array, and
+        return true iff no values produce false. The function p is
+        called with 3 arguments: the value, its index, and the array
+        itself.
+
+    arr:any(p: (v: any, i: number, a: array)->boolean): boolean
+        Apply a predicate function p to each element of the array, and
+        return true iff at least one element produces true.
+
+  SEARCHING BY EQUALITY
+
+    arr:includes(x: any, idx: number|nil): boolean
+        Return true iff any of the elements is identical to the
+        supplied value x. The optional argument idx, if given,
+        determines the position where the search starts at.
+
+    arr:indexOf(x: any, idx: number|nil): number|nil
+        Return the index of the first element in the array which is
+        identical to the supplied value x, or false if no such element
+        is found. The optional argument idx, when supplied, determines
+        the position where the search starts at.
+
+    arr:lastIndexOf(x: any, idx: number|nil): number|nil
+        Like indexOf(), but the search is done in reverse order.
+
+  SEARCHING WITH A PREDICATE
+
+    arr:filter(p: (v: any, i: number, a: array)->boolean): boolean
+        Apply a predicate function p to each element of the array, and
+        return a new array with the values that produce true.
+
+    arr:find(p: (v: any, i: number, a: array)->boolean): (any, number)|nil
+        Apply a predicate function p to each element of the array, and
+        return the first value that prodces true along with its
+        index. If no such value is found, the method returns nil.
+
+SEE ALSO
+    containers
