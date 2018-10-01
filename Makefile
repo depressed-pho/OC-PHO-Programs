@@ -19,8 +19,10 @@ dist:
 	mkdir -p _dist/man/containers
 	mkdir -p _dist/test/containers
 	cp containers/lib/array.lua	_dist/lib/containers
+	cp containers/lib/map.lua	_dist/lib/containers
 	cp containers/man/array		_dist/man/containers
 	cp containers/test/array.lua	_dist/test/containers
+	cp containers/test/map.lua	_dist/test/containers
 	cp mutex/lib/mutex.lua		_dist/lib
 	cp mutex/man/mutex		_dist/man
 	cp mutex/test/mutex.lua		_dist/test

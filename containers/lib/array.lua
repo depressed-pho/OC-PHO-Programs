@@ -80,7 +80,7 @@ function array:_concatInplace(xs)
     return self
 end
 
-function array:values()
+function array:entries()
     return function (_, i)
         i = i + 1
         if i <= self.xs.n then
@@ -95,7 +95,7 @@ function array:all(p)
     checkArg(1, p, "function")
 
     for i = 1, self.xs.n do
-        if not p(self.xs[i], i, self) then
+        if not p(self.xs[i], i) then
             return false
         end
     end
@@ -106,7 +106,7 @@ function array:any(p)
     checkArg(1, p, "function")
 
     for i = 1, self.xs.n do
-        if p(self.xs[i], i, self) then
+        if p(self.xs[i], i) then
             return true
         end
     end
@@ -118,7 +118,7 @@ function array:filter(f)
 
     local ret = array.new()
     for i = 1, self.xs.n do
-        if f(self.xs[i], i, self) then
+        if f(self.xs[i], i) then
             ret:push(self.xs[i])
         end
     end
@@ -129,7 +129,7 @@ function array:find(f)
     checkArg(1, f, "function")
 
     for i = 1, self.xs.n do
-        if f(self.xs[i], i, self) then
+        if f(self.xs[i], i) then
             return self.xs[i], i
         end
     end
@@ -141,7 +141,7 @@ function array:concatMap(f)
 
     local ret = array.new()
     for i = 1, self.xs.n do
-        local ys = f(self.xs[i], i, self)
+        local ys = f(self.xs[i], i)
         ret:push(table.unpack(ys.xs))
     end
     return ret
@@ -180,7 +180,7 @@ function array:map(f)
 
     local ret = array.new()
     for i = 1, self.xs.n do
-        local y = f(self.xs[i], i, self)
+        local y = f(self.xs[i], i)
         ret:push(y)
     end
     return ret

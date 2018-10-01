@@ -1,10 +1,12 @@
 # containers
 
-This package provides a collection of container classes that suck less than tables.
+This package provides a collection of container classes that suck less
+than tables.
 
 ## Modules
 
 * [containers/array](containers/man/array)
+* [containers/map](containers/man/map)
 
 ## Dependencies
 

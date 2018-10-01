@@ -1,5 +1,5 @@
 NAME
-    containers/array -- Array that sucks less than Lua sequences
+    containers/array -- Arrays that suck less than Lua sequences
 
 SYNOPSIS
     local array = require("containers/array")
@@ -12,8 +12,8 @@ SYNOPSIS
     arr:push(nil)
 
     -- Iterate over each element of the array.
-    for e in arr:values() do
-        print(e)
+    for idx, val in arr:entries() do
+        print(val)
     end
     -- ..prints '1' and 'nil'
 
@@ -28,7 +28,7 @@ CONSTRUCTORS
         elements of the array.
 
     array.from(t: table): array
-    array.from(itr: function): array
+    array.from(iter: function): array
         Create an array by shallow-copying a sequence, or iterating
         through an iterator. The iterator is supposed to generate
         pairs of (i, v) where i is the index and v is the value.
@@ -48,7 +48,7 @@ METHODS
         Return the length of the array.
 
     arr:table(): table
-        Return the shallow copy of the array as a sequence. The method
+        Return a shallow copy of the array as a sequence. The method
         also sets the "n" field just like the builtin table.pack().
 
     arr:clone(): array
@@ -58,19 +58,18 @@ METHODS
         Return a shallow copy of the array with another array "xs"
         appended to the end.
 
-    arr:values(): function
+    arr:entries(): function
         Return an iterator which generates pairs of (i, v) where i is
         the index and v is the value.
 
   ARRAY TRANSFORMATIONS
 
-    arr:map(f: (v: any, i: number, a: array)->any): array
+    arr:map(f: (v: any, i: number)->any): array
         Map a function over all the elements of the array, and return
         a new array consisting of the resulting values. The function f
-        is called with 3 arguments: the element, its index, and the
-        array itself.
+        is called with 2 arguments: the element and its index.
 
-    arr:concatMap(f: (v: any, i: number, a: array)->array): array
+    arr:concatMap(f: (v: any, i: number)->array): array
         Map a function over all the elements of the array, and
         concatenate the resulting arrays.
 
@@ -80,7 +79,7 @@ METHODS
     arr:sort([cmpLE: (any, any)->boolean]): array
         Return a shallow copy of the array with elements sorted. This
         is a stable sort, unlike the builtin function
-        table.sort(). The optional argument cmpLE, if given, is used
+        table.sort(). The optional argument "cmpLE", if given, is used
         as the order. It takes 2 elements and is supposed to return
         true iff the first one is less than or equal to the second
         one.
@@ -129,13 +128,12 @@ METHODS
 
   SPECIAL FOLDS
 
-    arr:all(p: (v: any, i: number, a: array)->boolean): boolean
+    arr:all(p: (v: any, i: number)->boolean): boolean
         Apply a predicate function p to each value of the array, and
         return true iff no values produce false. The function p is
-        called with 3 arguments: the value, its index, and the array
-        itself.
+        called with 2 arguments: the value and its index.
 
-    arr:any(p: (v: any, i: number, a: array)->boolean): boolean
+    arr:any(p: (v: any, i: number)->boolean): boolean
         Apply a predicate function p to each element of the array, and
         return true iff at least one element produces true.
 
@@ -157,14 +155,11 @@ METHODS
 
   SEARCHING WITH A PREDICATE
 
-    arr:filter(p: (v: any, i: number, a: array)->boolean): boolean
+    arr:filter(p: (v: any, i: number)->boolean): boolean
         Apply a predicate function p to each element of the array, and
         return a new array with the values that produce true.
 
-    arr:find(p: (v: any, i: number, a: array)->boolean): (any, number)|nil
+    arr:find(p: (v: any, i: number)->boolean): (any, number)|nil
         Apply a predicate function p to each element of the array, and
         return the first value that prodces true along with its
         index. If no such value is found, the method returns nil.
-
-SEE ALSO
-    containers

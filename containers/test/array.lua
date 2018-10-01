@@ -68,15 +68,15 @@ t:subtest(
     end)
 
 t:subtest(
-    'array:values()',
+    'array:entries()',
     function ()
         t:plan(1)
 
         local arr = array.new('a', 'b', nil, 'c')
         local tab = table.pack('a', 'b', nil, 'c')
         t:isDeeply(
-            array.from(arr:values()):table(), tab,
-            'array:values() returns a key/value iterator')
+            array.from(arr:entries()):table(), tab,
+            'array:entries() returns a key/value iterator')
     end)
 
 t:subtest(
