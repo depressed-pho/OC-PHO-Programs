@@ -16,21 +16,19 @@ dist:
 	mkdir -p _dist/bin
 	mkdir -p _dist/lib/containers
 	mkdir -p _dist/lib/tap/parser
+	mkdir -p _dist/lib/program-options
 	mkdir -p _dist/man/containers
 	mkdir -p _dist/test/containers
-	cp containers/lib/array.lua	_dist/lib/containers
-	cp containers/lib/map.lua	_dist/lib/containers
-	cp containers/man/array		_dist/man/containers
-	cp containers/test/array.lua	_dist/test/containers
-	cp containers/test/map.lua	_dist/test/containers
-	cp mutex/lib/mutex.lua		_dist/lib
-	cp mutex/man/mutex		_dist/man
-	cp mutex/test/mutex.lua		_dist/test
-	cp tap/bin/prove.lua		_dist/bin
-	cp tap/lib/harness.lua		_dist/lib/tap
-	cp tap/lib/parser.lua		_dist/lib/tap
-	cp tap/lib/parser/result.lua	_dist/lib/tap/parser
-	cp tap/lib/statistics.lua	_dist/lib/tap
-	cp tap/lib/test.lua		_dist/lib/tap
+	mkdir -p _dist/test/program-options
+	cp containers/lib/*.lua		_dist/lib/containers
+	cp containers/man/*		_dist/man/containers
+	cp containers/test/*.lua	_dist/test/containers
+	cp mutex/lib/*.lua		_dist/lib
+	cp mutex/man/*			_dist/man
+	cp mutex/test/*.lua		_dist/test
+	cp tap/bin/*.lua		_dist/bin
+	cp tap/lib/parser/*.lua		_dist/lib/tap/parser
+	cp program-options/lib/*.lua	_dist/lib/program-options
+	cp program-options/test/*.lua	_dist/test/program-options
 	tar -cvf OC-PHO-Programs.tar -C _dist .
 	rm -rf _dist
