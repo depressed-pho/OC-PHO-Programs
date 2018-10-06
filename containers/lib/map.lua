@@ -31,14 +31,12 @@ function map.new(...)
     if type(args[1]) == "table" then
         for k, v in pairs(args[1]) do
             self.m[k] = v
-            if v then
-                self.sz = self.sz + 1
-            end
+            self.sz   = self.sz + 1
         end
     elseif type(args[1]) == "function" then
         for k, v in table.unpack(args) do
             self.m[k] = _nil2NIL(v)
-            self.sz = self.sz + 1
+            self.sz   = self.sz + 1
         end
     end
     return self

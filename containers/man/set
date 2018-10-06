@@ -1,0 +1,93 @@
+NAME
+    containers/set -- Finite sets that suck less than Lua tables
+
+SYNOPSIS
+    local set = require("containers/set")
+
+    -- Create an empty set.
+    local s = set.new()
+
+    -- Insert some values.
+    s:insert("a")
+    s:insert("b")
+
+    -- Iterate over each element of the set.
+    for val in s:values() do
+        print(val)
+    end
+    -- ..prints 'a' and 'b'
+
+DESCRIPTION
+    This module provides a finite set class. Unlike Lua tables, a nil
+    value is also a valid element of sets.
+
+CONSTRUCTORS
+    set.new(): set
+        Create an empty set.
+
+    set.new(t: table): set
+    set.new(iter: function): set
+        Create a set by shallow-copying a Lua sequence, or iterating
+        through an iterator. The iterator is supposed to generate a
+        series of v where v is the value. This means it is impossible
+        to construct a set containing a nil element in this way.
+
+METHODS
+  BASIC METHODS
+
+    s:has(val: any): boolean
+        Return true iff a given value exists in the set.
+
+    s:insert(val: any): self
+        Insert a value into a set if it isn't already an element of
+        the set.
+
+    s:delete(val: any): self
+        Remove a value from a set if it is an element of the set.
+
+    s:size(): number
+        Return the number of elements in a set.
+
+    s:table(): table
+        Return a shallow copy of the set as a sequence in an undefined
+        order.
+
+    s:clone(): set
+        Return a shallow copy of a set.
+
+    s:clear(): self
+        Remove all the elements from a set.
+
+    s:values(): function
+        Return an iterator which generates series of v where v is the
+        value. Due to a severe limitation in the iterator protocol,
+        the iterator throws an error when the set contains a nil
+        element.
+
+  COMBINING SETS
+
+    s:union(xs: set): set
+        Return a shallow copy of a set with another set "xs" merged
+        with it.
+
+    s:difference(xs: set): set
+        Return a shallow copy of a set with removing any of the
+        elements that also exist in another set "xs".
+
+    s:intersection(xs: set): set
+        Return a shallow copy of a set with removing any of the
+        elements that dont exist in another set "xs".
+
+  SET TRANSFORMATIONS
+
+    s:map(f: (val: any)->any): set
+        Map a function over all the elements in a set, and return a
+        new set consisting of the resulting values.
+
+    s:filter(p: (val: any)->boolean()): set
+        Apply a predicate function p to each value in a set, and
+        return a new set with values that produce true.
+
+    s:partition(p: (val: any)->boolean()): set, set
+        Apply a predicate function p to each value in the set, and
+        return new sets with values that produce true and those don't.

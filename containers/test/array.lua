@@ -15,7 +15,7 @@ t:subtest(
         t:plan(2)
 
         local tab = table.pack('a', 'b', nil, 'c')
-        local function itr(xs)
+        local function iter(xs)
             return function (_, i)
                 i = i + 1
                 if i <= xs.n then
@@ -26,7 +26,7 @@ t:subtest(
             end, nil, 0
         end
         t:isDeeply(array.from(tab):table(), tab, 'array.from(table)')
-        t:isDeeply(array.from(itr(tab)):table(), tab, 'array.from(iterator)')
+        t:isDeeply(array.from(iter(tab)):table(), tab, 'array.from(iterator)')
     end)
 
 t:subtest(

@@ -29,6 +29,6 @@ dist:
 	cp tap/bin/*.lua		_dist/bin
 	cp tap/lib/parser/*.lua		_dist/lib/tap/parser
 	cp program-options/lib/*.lua	_dist/lib/program-options
-	cp program-options/test/*.lua	_dist/test/program-options
+#	cp program-options/test/*.lua	_dist/test/program-options
 	tar -cvf OC-PHO-Programs.tar -C _dist .
 	rm -rf _dist

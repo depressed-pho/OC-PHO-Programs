@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
     local map = require("containers/map")
 
-    -- Create an empty map
+    -- Create an empty map.
     local m = map.new()
 
     -- Insert some values. nil is also a valid value.
@@ -45,6 +45,9 @@ METHODS
         if the default value is not supplied and the key does not
         exist.
 
+    m:has(key: any): boolean
+        Return true iff a given key exists in the map.
+
     m:set(key: any, value: any[, combine: (old: any, new: any, k: any)->any]): self
         Insert a value associated with the given key with overwriting
         an existing value if any.
@@ -64,10 +67,10 @@ METHODS
         Return a shallow copy of the map as a table.
 
     m:clone(): map
-        Return a shallow copy of the map.
+        Return a shallow copy of a map.
 
     m:clear(): self
-        Remove all the key/value pairs from the map.
+        Remove all the key/value pairs from a map.
 
     m:entries(): function
         Return an iterator which generates pairs of (k, v) where k is
@@ -105,8 +108,6 @@ METHODS
         return a new map consisting of the resulting entries. The
         function f is called with 2 arguments: the value and its
         corresponding key.
-
-  SEARCHING WITH A PREDICATE
 
     m:filter(p: (v: any, k: any)->boolean): map
         Apply a predicate function p to each value in the map, and
