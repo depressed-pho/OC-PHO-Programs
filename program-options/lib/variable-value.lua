@@ -16,8 +16,13 @@ function variableValue:semantic()
     return self._semantic
 end
 
-function variableValue:value()
-    return self._value
+function variableValue:value(...)
+    local args = table.pack(...)
+    if args.n > 0 then
+        self._value = args[1]
+    else
+        return self._value
+    end
 end
 
 function variableValue:defaulted()

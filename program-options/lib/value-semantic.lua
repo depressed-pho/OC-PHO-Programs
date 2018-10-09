@@ -8,11 +8,25 @@ function valueSemantic.new()
     self._implicit   = nil
     self._name       = nil
     self._notifier   = function (_) end
-    self._composing  = false
+    self._composer   = function (_, b) return b end
     self._zeroTokens = false
     self._required   = false
+    self._parser     = function (_, str) return str end
+    self._formatter  = tostring
 
     return self
+end
+
+function valueSemantic.isInstance(obj)
+    checkArg(1, obj, "table")
+    local meta = getmetatable(obj)
+    if meta == valueSemantic then
+        return true
+    elseif type(meta.__index) == "table" then
+        return valueSemantic.isInstance(meta.__index)
+    else
+        return false
+    end
 end
 
 function valueSemantic:default(...)
@@ -25,11 +39,17 @@ function valueSemantic:default(...)
     end
 end
 
-function valueSemantic:implicit(val)
-    self._implicit = val
-    return self
+function valueSemantic:implicit(...)
+    local args = table.pack(...)
+    if args.n > 0 then
+        self._implicit = args[1]
+        return self
+    else
+        return self._implicit
+    end
 end
 
+-- Name of the value used in help messages, i.e. ARG in --opt=ARG.
 function valueSemantic:name(...)
     local args = table.pack(...)
     if args.n > 0 then
@@ -42,24 +62,16 @@ function valueSemantic:name(...)
     end
 end
 
-function valueSemantic:notifier(...)
-    local args = table.pack(...)
-    if args.n > 0 then
-        checkArg(1, args[1], "function")
-        self._notifier = args[1]
-        return self
-    else
-        return self._notifier
-    end
-end
-
-function valueSemantic:composing()
-    self._composing = true
+function valueSemantic:notifier(f)
+    checkArg(1, f, "function")
+    self._notifier = f
     return self
 end
 
-function valueSemantic:isComposing()
-    return self._composing
+function valueSemantic:composer(f)
+    checkArg(1, f, "function")
+    self._composer = f
+    return self
 end
 
 function valueSemantic:zeroTokens()
@@ -76,8 +88,34 @@ function valueSemantic:isRequired()
     return self._required
 end
 
-function valueSemantic:parse(oldValue, token) -- luacheck: ignore self oldValue token
-    error("Subclasses are expected to override this method.")
+function valueSemantic:parser(f)
+    checkArg(1, f, "function")
+    self._parser = f
+    return self
+end
+
+function valueSemantic:parser(f)
+    checkArg(1, f, "function")
+    self._formatter = f
+    return self
+end
+
+function valueSemantic:notify(value)
+    self._notifier(value)
+    return self
+end
+
+function valueSemantic:compose(oldValue, newValue)
+    return self._composer(oldValue, newValue)
+end
+
+function valueSemantic:parse(oldValue, token)
+    assert(not self._zeroTokens)
+    return self._parser(oldValue, token)
+end
+
+function valueSemantic:format(value)
+    return self._formatter(value)
 end
 
 return valueSemantic

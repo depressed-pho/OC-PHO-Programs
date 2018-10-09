@@ -30,7 +30,7 @@ CONSTRUCTORS
         Create an empty map.
 
     map.new(t: table): map
-    map.new(iter: function): map
+    map.new(iter: function, s: any, var: any): map
         Create a map by shallow-copying a table, or iterating through
         an iterator. The iterator is supposed to generate pairs of (k,
         v) where k is the key and v is the value.
@@ -72,7 +72,7 @@ METHODS
     m:clear(): self
         Remove all the key/value pairs from a map.
 
-    m:entries(): function
+    m:entries(): function, any, any
         Return an iterator which generates pairs of (k, v) where k is
         the key and v is the value.
 

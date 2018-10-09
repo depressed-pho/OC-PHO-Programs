@@ -80,6 +80,29 @@ t:subtest(
     end)
 
 t:subtest(
+    'array:values()',
+    function ()
+        t:plan(4)
+
+        local arr       = array.new('a', 'b')
+        local f, s, var = arr:values()
+        local fst       = f(s, var)
+        local snd       = f(s, fst)
+        local trd       = f(s, snd)
+        t:is(fst, 'a', 'values[1]')
+        t:is(snd, 'b', 'values[2]')
+        t:is(trd, nil, 'values[3]')
+
+        t:diesOK(
+            function ()
+                for _ in array.new('a', nil):values() do
+                    -- do nothing
+                end
+            end,
+            'arr:values() raises an error when arr has a nil element')
+    end)
+
+t:subtest(
     'array:clone()',
     function ()
         t:plan(2)

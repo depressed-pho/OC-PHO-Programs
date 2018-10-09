@@ -26,7 +26,7 @@ CONSTRUCTORS
         Create an empty set.
 
     set.new(t: table): set
-    set.new(iter: function): set
+    set.new(iter: function, s: any, var: any): set
         Create a set by shallow-copying a Lua sequence, or iterating
         through an iterator. The iterator is supposed to generate a
         series of v where v is the value. This means it is impossible
@@ -58,11 +58,11 @@ METHODS
     s:clear(): self
         Remove all the elements from a set.
 
-    s:values(): function
-        Return an iterator which generates series of v where v is the
-        value. Due to a severe limitation in the iterator protocol,
-        the iterator throws an error when the set contains a nil
-        element.
+    s:values(): function, any, any
+        Return an iterator which generates a series of v where v is
+        the value. Due to a severe limitation in the iterator
+        protocol, the iterator throws an error when the set contains a
+        nil element.
 
   COMBINING SETS
 

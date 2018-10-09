@@ -91,6 +91,24 @@ function array:entries()
     end, nil, 0
 end
 
+function array:values()
+    local i = 0
+    return function ()
+        i = i + 1
+        if i <= self.xs.n then
+            if self.xs[i] == nil then
+                -- We believe an error is still better than a silent
+                -- truncation of data...
+                error("The array has a nil element. Method :values() cannot work correctly.", 2)
+            else
+                return self.xs[i]
+            end
+        else
+            return nil
+        end
+    end, nil, nil
+end
+
 function array:all(p)
     checkArg(1, p, "function")
 

@@ -18,14 +18,28 @@ end
 
 function variablesMap:notify()
     for _, val in self:entries() do
-        local notifier = val:semantic():notifier()
-        notifier(val:value())
+        val:semantic():notify(val:value())
     end
     return self
 end
 
-function variablesMap:store(parsedOpts) -- luacheck: ignore self
-    error("FIXME: not implemented", parsedOpts)
+function variablesMap:store(parsedOpts)
+    checkArg(1, parsedOpts, "table") -- map<string, variableValue>
+
+    for name, newVal in parsedOpts:entries() do
+        if self:has(name) then
+            local oldVal = map.get(self, name)
+            if oldVal:defaulted() then
+                self:set(name, newVal)
+            else
+                oldVal:value(
+                    oldVal:semantic():compose(oldVal:value(), newVal:value()))
+            end
+        else
+            self:set(name, newVal)
+        end
+    end
+    return self
 end
 
 return variablesMap

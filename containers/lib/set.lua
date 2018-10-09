@@ -98,15 +98,15 @@ end
 function set:values()
     local f, s, var = pairs(self.m)
     return function (s1, var1)
-        local key, _ = f(s1, var1)
-        if key == nil then
+        local v, _ = f(s1, var1)
+        if v == nil then
             return nil
-        elseif key == NIL then
+        elseif v == NIL then
             -- We believe an error is still better than a silent
             -- truncation of data...
             error("The set has a nil element. Method :values() cannot work correctly.", 2)
         else
-            return _NIL2nil(key)
+            return v
         end
     end, s, var
 end
