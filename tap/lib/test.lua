@@ -53,7 +53,7 @@ function test:subtest(name, thunk)
     checkArg(1, name , "string"  )
     checkArg(2, thunk, "function")
 
-    -- A subtest is also a test, which is why we increment the counter
+    -- A subtest is a test too, which is why we increment the counter
     -- here.
     local top = self:_top()
     top.counter = top.counter + 1

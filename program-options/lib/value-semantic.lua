@@ -4,15 +4,15 @@ valueSemantic.__index = valueSemantic
 function valueSemantic.new()
     local self = setmetatable({}, valueSemantic)
 
-    self._default    = nil
-    self._implicit   = nil
-    self._name       = nil
-    self._notifier   = function (_) end
-    self._composer   = function (_, b) return b end
-    self._zeroTokens = false
-    self._required   = false
-    self._parser     = function (_, str) return str end
-    self._formatter  = tostring
+    self._default   = nil
+    self._implicit  = nil
+    self._name      = nil
+    self._notifier  = function (_) end
+    self._composer  = function (_, b) return b end
+    self._noArgs    = false
+    self._required  = false
+    self._parser    = function (_, str) return str end
+    self._formatter = tostring
 
     return self
 end
@@ -74,9 +74,13 @@ function valueSemantic:composer(f)
     return self
 end
 
-function valueSemantic:zeroTokens()
-    self._zeroTokens = true
+function valueSemantic:noArgs()
+    self._noArgs = true
     return self
+end
+
+function valueSemantic:isNoArgs()
+    return self._noArgs
 end
 
 function valueSemantic:required()
@@ -94,7 +98,7 @@ function valueSemantic:parser(f)
     return self
 end
 
-function valueSemantic:parser(f)
+function valueSemantic:formatter(f)
     checkArg(1, f, "function")
     self._formatter = f
     return self
@@ -110,7 +114,7 @@ function valueSemantic:compose(oldValue, newValue)
 end
 
 function valueSemantic:parse(oldValue, token)
-    assert(not self._zeroTokens)
+    assert(not self._noArgs)
     return self._parser(oldValue, token)
 end
 

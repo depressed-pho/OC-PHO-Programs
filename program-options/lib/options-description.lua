@@ -62,7 +62,7 @@ function optionsDescription:addOptions()
         if args.n == 2 then
             if type(args[2]) == "string" then
                 local name, description = ...
-                local sem = valueSemantic.new():implicit(nil):zeroTokens()
+                local sem = valueSemantic.new():implicit(nil):noArgs()
                 self:add(
                     optionDescription.new(name, sem, description))
                 return helper
@@ -71,7 +71,7 @@ function optionsDescription:addOptions()
                 if not valueSemantic.isInstance(sem) then
                     error("Not an instance of valueSemantic: "..sem, 2)
                 end
-                self.add(
+                self:add(
                     optionDescription.new(name, sem))
             end
         else
@@ -79,7 +79,7 @@ function optionsDescription:addOptions()
             if not valueSemantic.isInstance(sem) then
                 error("Not an instance of valueSemantic: "..sem, 2)
             end
-            self.add(
+            self:add(
                 optionDescription.new(name, sem, description))
         end
     end

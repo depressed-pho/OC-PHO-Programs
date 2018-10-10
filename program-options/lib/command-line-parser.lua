@@ -65,6 +65,7 @@ function classifier:next() -- type, value, original-token
         return nil
     else
         local token = self._tokens:shift()
+        assert(type(token) == "string")
 
         if self._endOfOpts then
             -- We have already encountered the "--" marker.
@@ -139,7 +140,7 @@ function commandLineParser:run(args)
             if not self:_gotOption(ret, name, optToken) then
                 error("Application error: positional argument #"..positionalIdx..
                           " is defined as "..self:_format(name, optToken)..
-                          " but no such option has been declared.", 2)
+                          " but no such option has been declared", 2)
             end
             positionalIdx = positionalIdx + 1
         else
@@ -165,13 +166,13 @@ function commandLineParser:run(args)
             if not self:_gotOption(ret, table.unpack(tokValue)) then
                 error("Application error: an external command-line parser interpreted"..
                           " token `"..origToken.."' as "..self:_format(table.unpack(tokValue))..
-                          " but no such option has been declared.", 2)
+                          " but no such option has been declared", 2)
             end
         elseif tokType == "ext-opt" then
             if not self:_gotOption(ret, tokValue) then
                 error("Application error: an external command-line parser interpreted"..
                           " token `"..origToken.."' as "..self:_format(tokValue)..
-                          " but no such option has been declared.", 2)
+                          " but no such option has been declared", 2)
             end
         elseif tokType == "long-pair" then
             if not self:_gotOption(ret, table.unpack(tokValue)) then
@@ -191,7 +192,7 @@ function commandLineParser:run(args)
                 local opt = self._opts:find(shortName)
                 if opt then
                     local sem = opt:semantic()
-                    if sem:zeroTokens() then
+                    if sem:isNoArgs() then
                         local found = self:_gotOption(ret, shortName)
                         assert(found)
                     else
@@ -253,20 +254,26 @@ function commandLineParser:_gotOption(ret, name, strVal)
         local sem   = opt:semantic()
         local value -- variableValue
         if strVal then
-            if sem:zeroTokens() then
-                error("Option "..self:_format(name).." takes no arguments.", 3)
+            if sem:isNoArgs() then
+                error("Option "..self:_format(name).." takes no arguments", 3)
             else
-                if old then
-                    value = variableValue.new(
-                        sem, sem:parse(old:value(), strVal), false)
-                else
-                    value = variableValue.new(
-                        sem, sem:parse(nil, strVal), false)
+                local ok, err = pcall(
+                    function ()
+                        if old then
+                            value = variableValue.new(
+                                sem, sem:parse(old:value(), strVal), false)
+                        else
+                            value = variableValue.new(
+                                sem, sem:parse(nil, strVal), false)
+                        end
+                    end)
+                if not ok then
+                    error("Invalid argument for option "..self:_format(name)..": "..err, 3)
                 end
             end
         else
             if sem:isRequired() then
-                error("Option "..self:_format(name).." takes an argument.", 3)
+                error("Option "..self:_format(name).." takes an argument", 3)
             else
                 value = variableValue.new(
                     sem, sem:implicit(), false)
