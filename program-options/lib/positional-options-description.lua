@@ -17,7 +17,7 @@ function positionalOptionsDescription.isInstance(obj)
     local meta = getmetatable(obj)
     if meta == positionalOptionsDescription then
         return true
-    elseif type(meta.__index) == "table" then
+    elseif meta and type(meta.__index) == "table" then
         return positionalOptionsDescription.isInstance(meta.__index)
     else
         return false

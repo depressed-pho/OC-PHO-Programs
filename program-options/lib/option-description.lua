@@ -21,7 +21,7 @@ function optionDescription.isInstance(obj)
     local meta = getmetatable(obj)
     if meta == optionDescription then
         return true
-    elseif type(meta.__index) == "table" then
+    elseif meta and type(meta.__index) == "table" then
         return optionDescription.isInstance(meta.__index)
     else
         return false

@@ -4,14 +4,16 @@ valueSemantic.__index = valueSemantic
 function valueSemantic.new()
     local self = setmetatable({}, valueSemantic)
 
-    self._default   = nil
-    self._implicit  = nil
-    self._name      = nil
+    self._default   = nil -- any
+    self._implicit  = nil -- any
+    self._name      = "ARG"
     self._notifier  = function (_) end
-    self._composer  = function (_, b) return b end
+    self._appender  = function (_, val) return val end
+    self._merger    = nil -- nil | (any, any)->any
+    self._merging   = false
     self._noArgs    = false
     self._required  = false
-    self._parser    = function (_, str) return str end
+    self._parser    = function (str) return str end
     self._formatter = tostring
 
     return self
@@ -22,7 +24,7 @@ function valueSemantic.isInstance(obj)
     local meta = getmetatable(obj)
     if meta == valueSemantic then
         return true
-    elseif type(meta.__index) == "table" then
+    elseif meta and type(meta.__index) == "table" then
         return valueSemantic.isInstance(meta.__index)
     else
         return false
@@ -57,6 +59,7 @@ function valueSemantic:name(...)
         self._name = args[1]
         return self
     else
+        assert(not self._noArgs)
         assert(self._name)
         return self._name
     end
@@ -68,12 +71,28 @@ function valueSemantic:notifier(f)
     return self
 end
 
-function valueSemantic:composer(f)
+function valueSemantic:appender(f)
     checkArg(1, f, "function")
-    self._composer = f
+    self._appender = f
     return self
 end
 
+function valueSemantic:merger(f)
+    checkArg(1, f, "function")
+    self._merger = f
+    return self
+end
+
+-- State that multiple occurences of the option in different sources
+-- should result in those options combined together, as opposed to the
+-- last source being preferred. This only makes sence if a merging
+-- function is also defined.
+function valueSemantic:merging()
+    self._merging = true
+    return self
+end
+
+-- State that the option cannot take any arguments.
 function valueSemantic:noArgs()
     self._noArgs = true
     return self
@@ -83,6 +102,8 @@ function valueSemantic:isNoArgs()
     return self._noArgs
 end
 
+-- State that the occurence of the option is mandatory, within a
+-- single call of vm:store().
 function valueSemantic:required()
     self._required = true
     return self
@@ -109,13 +130,26 @@ function valueSemantic:notify(value)
     return self
 end
 
-function valueSemantic:compose(oldValue, newValue)
-    return self._composer(oldValue, newValue)
+function valueSemantic:append(oldValue, newValue)
+    return self._appender(oldValue, newValue)
 end
 
-function valueSemantic:parse(oldValue, token)
+function valueSemantic:merge(oldValue, newValue)
+    if self._merging then
+        if self._merger then
+            return self._merger(oldValue, newValue)
+        else
+            error("Misuse of valueSemantic:merging(): a merging function is required", 2)
+        end
+    else
+        return newValue
+    end
+end
+
+function valueSemantic:parse(strVal)
+    checkArg(1, strVal, "string")
     assert(not self._noArgs)
-    return self._parser(oldValue, token)
+    return self._parser(strVal)
 end
 
 function valueSemantic:format(value)

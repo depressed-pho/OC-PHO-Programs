@@ -33,7 +33,7 @@ function variablesMap:store(parsedOpts)
                 self:set(name, newVal)
             else
                 oldVal:value(
-                    oldVal:semantic():compose(oldVal:value(), newVal:value()))
+                    oldVal:semantic():merge(oldVal:value(), newVal:value()))
             end
         else
             self:set(name, newVal)

@@ -23,7 +23,7 @@ function optionsDescription.isInstance(obj)
     local meta = getmetatable(obj)
     if meta == optionsDescription then
         return true
-    elseif type(meta.__index) == "table" then
+    elseif meta and type(meta.__index) == "table" then
         return optionsDescription.isInstance(meta.__index)
     else
         return false
@@ -51,7 +51,7 @@ function optionsDescription:add(desc)
         self._groups:push(desc)
         self._optMap = self._optMap:union(desc._optMap)
     else
-        error("Not an instance of optionDescription nor optionsDescription: "..desc, 2)
+        error("Not an instance of optionDescription nor optionsDescription: "..tostring(desc), 2)
     end
     return self
 end
@@ -59,29 +59,36 @@ end
 function optionsDescription:addOptions()
     local function helper(...)
         local args = table.pack(...)
-        if args.n == 2 then
+        if args.n == 1 then
+            local name = args[1]
+            local sem  = valueSemantic.new():implicit(true):noArgs()
+            self:add(
+                optionDescription.new(name, sem))
+        elseif args.n == 2 then
             if type(args[2]) == "string" then
                 local name, description = ...
-                local sem = valueSemantic.new():implicit(nil):noArgs()
+                local sem = valueSemantic.new():implicit(true):noArgs()
                 self:add(
                     optionDescription.new(name, sem, description))
-                return helper
             else
                 local name, sem = ...
                 if not valueSemantic.isInstance(sem) then
-                    error("Not an instance of valueSemantic: "..sem, 2)
+                    error("Not an instance of valueSemantic: "..tostring(sem), 2)
                 end
                 self:add(
                     optionDescription.new(name, sem))
             end
-        else
+        elseif args.n == 3 then
             local name, sem, description = ...
             if not valueSemantic.isInstance(sem) then
-                error("Not an instance of valueSemantic: "..sem, 2)
+                error("Not an instance of valueSemantic: "..tostring(sem), 2)
             end
             self:add(
                 optionDescription.new(name, sem, description))
+        else
+            error("wrong number of arguments", 2)
         end
+        return helper
     end
     return helper
 end

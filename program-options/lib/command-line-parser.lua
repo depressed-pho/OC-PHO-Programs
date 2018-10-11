@@ -20,7 +20,7 @@ end
 
 function commandLineParser:options(opts)
     if not optionsDescription.isInstance(opts) then
-        error("Not an instance of optionsDescription: "..opts, 2)
+        error("Not an instance of optionsDescription: "..tostring(opts), 2)
     end
     self._opts = opts
     return self
@@ -28,7 +28,7 @@ end
 
 function commandLineParser:positional(posOpts)
     if not positionalOptionsDescription.isInstance(posOpts) then
-        error("Not an instance of positionalOptionsDescription: "..posOpts, 2)
+        error("Not an instance of positionalOptionsDescription: "..tostring(posOpts), 2)
     end
     self._posOpts = posOpts
     return self
@@ -257,23 +257,29 @@ function commandLineParser:_gotOption(ret, name, strVal)
             if sem:isNoArgs() then
                 error("Option "..self:_format(name).." takes no arguments", 3)
             else
-                local ok, err = pcall(
+                local ok, result = pcall(
                     function ()
-                        if old then
-                            value = variableValue.new(
-                                sem, sem:parse(old:value(), strVal), false)
-                        else
-                            value = variableValue.new(
-                                sem, sem:parse(nil, strVal), false)
-                        end
+                        return sem:parse(strVal)
                     end)
-                if not ok then
-                    error("Invalid argument for option "..self:_format(name)..": "..err, 3)
+                if ok then
+                    if old then
+                        value = variableValue.new(
+                            sem, sem:append(old:value(), result), false)
+                    else
+                        value = variableValue.new(
+                            sem, sem:append(sem:default(), result), false)
+                    end
+                else
+                    error("Invalid argument for option "..self:_format(name)..": "..result, 3)
                 end
             end
         else
-            if sem:isRequired() then
-                error("Option "..self:_format(name).." takes an argument", 3)
+            if sem:implicit() == nil then
+                error("Option "..self:_format(name).." takes a mandatory argument", 3)
+
+            elseif old then
+                value = variableValue.new(
+                    sem, sem:append(old:value(), sem:implicit()), false)
             else
                 value = variableValue.new(
                     sem, sem:implicit(), false)
