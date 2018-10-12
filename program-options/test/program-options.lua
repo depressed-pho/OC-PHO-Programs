@@ -179,3 +179,6 @@ t:subtest(
         t:is(vm:get("devices"), "skip", "-D skip")
         t:is(vm:get("invert-match"), true, "-v")
     end)
+
+-- FIXME: Test for positional arguments
+-- FIXME: Test for required()'ed values

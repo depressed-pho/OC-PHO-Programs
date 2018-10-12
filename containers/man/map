@@ -1,5 +1,5 @@
 NAME
-    containers/map -- Finite maps that sucks less than Lua tables
+    containers/map -- Finite maps that suck less than Lua tables
 
 SYNOPSIS
     local map = require("containers/map")

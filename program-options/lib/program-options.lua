@@ -1,35 +1,13 @@
-local po = {}
-
--- Require a module lazily. THINKME: Worth moving to a separate
--- package?
-local function requireL(modName)
-    -- Mutate 'dst' so that it becomes identical to 'src'.
-    local function overwrite(dst, src)
-        for k, v in pairs(src) do
-            rawset(dst, k, v)
-        end
-        setmetatable(dst, getmetatable(src))
-    end
-    local mt = {
-        __index = function (module, symbol)
-            overwrite(module, require(modName))
-            return module[symbol]
-        end,
-        __newindex = function (module, symbol, value)
-            overwrite(module, require(modName))
-            module[symbol] = value
-        end
-    }
-    return setmetatable({}, mt)
-end
+local lazy = require('lazy')
+local po   = {}
 
 -- Modules
-po.commandLineParser            = requireL('program-options/command-line-parser')
-po.optionDescription            = requireL('program-options/option-description')
-po.optionsDescription           = requireL('program-options/options-description')
-po.positionalOptionsDescription = requireL('program-options/positional-options-description')
-po.valueSemantic                = requireL('program-options/value-semantic')
-po.variablesMap                 = requireL('program-options/variables-map')
+po.commandLineParser            = lazy.require('program-options/command-line-parser')
+po.optionDescription            = lazy.require('program-options/option-description')
+po.optionsDescription           = lazy.require('program-options/options-description')
+po.positionalOptionsDescription = lazy.require('program-options/positional-options-description')
+po.valueSemantic                = lazy.require('program-options/value-semantic')
+po.variablesMap                 = lazy.require('program-options/variables-map')
 
 -- Utility functions
 function po.parseCommandLine(args, desc)

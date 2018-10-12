@@ -1,0 +1,47 @@
+NAME
+    lazy -- Lazy evaluation and module loading
+
+SYNOPSIS
+    local lazy = require("lazy")
+
+    -- Load a module lazily.
+    local foo = lazy.require("foo")
+
+    -- Create a lazily evaluated value.
+    local bar = lazy.delay(function () return 42 end)
+
+    -- Force the delayed computation.
+    print(lazy.force(bar))
+    -- ..prints 42
+
+    -- Delayed computation can also be called as a nullary function.
+    print(bar())
+    -- ..prints 42
+
+DESCRIPTION
+    This module provides functions to lazily load modules and lazily
+    evaluate values.
+
+    lazy.require(mod: string): table
+        Same as the builtin require() except it loads modules
+        lazily. The returned table is initially empty, but as soon as
+        its element is observed it will be swapped with the real
+        module.
+
+    lazy.delay(thunk: function): delayed
+        Create a lazily evaluated value out of a thunk which computes
+        the value. The resulting object doesn't behave like its
+        value. It must be passed to lazy.force() in order to get the
+        computed value, or alternatively it can also be called as a
+        function and it returns the value.
+
+    lazy.force(val: delayed): any
+        Force a delayed computation of a value and return it. If the
+        value has already been computed, it will be simply returned
+        without getting computed twice.
+
+        Applying lazy.force() to a delayed computation is semantically
+        equivalent to calling it as if it were a nullary function.
+
+SEE ALSO
+    package

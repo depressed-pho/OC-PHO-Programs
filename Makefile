@@ -34,6 +34,9 @@ dist:
 	cp containers/lib/*.lua		_dist/lib/containers
 	cp containers/man/*		_dist/man/containers
 	cp containers/test/*.lua	_dist/test/containers
+	cp lazy/lib/*.lua		_dist/lib
+	cp lazy/man/*			_dist/man
+	cp lazy/test/*.lua		_dist/test
 	cp mutex/lib/*.lua		_dist/lib
 	cp mutex/man/*			_dist/man
 	cp mutex/test/*.lua		_dist/test
