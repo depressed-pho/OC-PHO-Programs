@@ -1,7 +1,7 @@
 # lazy
 
-This module provides functions to lazily load modules and lazily
-evaluate values.
+This module provides functions to lazily load modules and evaluate
+values.
 
 ## Modules
 

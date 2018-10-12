@@ -19,8 +19,8 @@ SYNOPSIS
     -- ..prints 42
 
 DESCRIPTION
-    This module provides functions to lazily load modules and lazily
-    evaluate values.
+    This module provides functions to lazily load modules and evaluate
+    values.
 
     lazy.require(mod: string): table
         Same as the builtin require() except it loads modules
