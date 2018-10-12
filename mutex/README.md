@@ -4,7 +4,7 @@ This package provides low-level synchronization based on the thread API.
 
 ## Modules
 
-* [mutex](mutex/man/mutex)
+* [mutex](man/mutex)
 
 ## License
 

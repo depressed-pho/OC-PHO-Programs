@@ -5,7 +5,7 @@ values.
 
 ## Modules
 
-* [lazy](lazy/man/lazy)
+* [lazy](man/lazy)
 
 ## Dependencies
 

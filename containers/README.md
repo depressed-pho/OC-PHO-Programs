@@ -5,9 +5,9 @@ than tables.
 
 ## Modules
 
-* [containers/array](containers/man/array)
-* [containers/map](containers/man/map)
-* [containers/set](containers/man/set)
+* [containers/array](man/array)
+* [containers/map](man/map)
+* [containers/set](man/set)
 
 ## Dependencies
 
