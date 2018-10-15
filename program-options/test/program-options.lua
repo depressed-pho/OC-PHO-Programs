@@ -17,8 +17,19 @@ outputCtrl:addOptions()
     ("devices,D", po.enum("read", "skip"):default("read"):name("ACTION"), "how to handle devices")
     ("exclude"  , po.sequence(po.string()):name("PATTERN"), "skip files that match the pattern")
 
+local hidden = po.optionsDescription.new()
+hidden:addOptions()
+    ("pattern", po.string():required():name("PATTERN"))
+    ("file"   , po.sequence(po.string()):name("FILE"))
+
+local posDesc = po.positionalOptionsDescription.new()
+posDesc:add("pattern", 1):add("file", math.huge)
+
 local desc = po.optionsDescription.new()
 desc:add(misc):add(outputCtrl)
+
+local allDesc = po.optionsDescription.new()
+allDesc:add(misc):add(outputCtrl):add(hidden)
 
 t:subtest(
     "-h, --help",
@@ -180,5 +191,23 @@ t:subtest(
         t:is(vm:get("invert-match"), true, "-v")
     end)
 
--- FIXME: Test for positional arguments
--- FIXME: Test for required()'ed values
+t:subtest(
+    "positional and required arguments",
+    function ()
+        t:plan(3)
+
+        local vm     = po.variablesMap()
+        local parser = po.commandLineParser.new():options(allDesc):positional(posDesc)
+
+        vm:store(parser:run({"pat", "file1", "file2"}))
+        vm:notify()
+        t:is(vm:get("pattern"), "pat", "required positional")
+        t:isDeeply(vm:get("file"), {"file1", "file2"}, "positional (sequence)")
+
+        t:diesOK(
+            function ()
+                vm:store(parser:run({}))
+                vm:notify()
+            end,
+            "required but missing")
+    end)
