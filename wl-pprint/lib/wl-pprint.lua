@@ -66,10 +66,7 @@ local _flatten = {
         local doc = {
             tag = tag.Cat,
             fst = flatten(src.fst),
-            snd = lazy.delay(
-                function ()
-                    return flatten(src.snd())
-                end)
+            snd = flatten(src.snd)
         }
         return setmetatable(doc, mt)
     end,
@@ -137,7 +134,7 @@ local _flatten = {
         return setmetatable(doc, mt)
     end
 }
-local function flatten(doc)
+function flatten(doc)
     local f = _flatten[doc.tag]
     if f then
         return f(doc)
@@ -146,6 +143,8 @@ local function flatten(doc)
     end
 end
 
+-- Generate a document with a function and render it. The function
+-- will be applied to the current column position.
 local function column(f) -- (n: integer): document
     local doc = {
         tag = tag.Column,
@@ -154,6 +153,8 @@ local function column(f) -- (n: integer): document
     return setmetatable(doc, mt)
 end
 
+-- Generate a document with a function and render it. The function
+-- will be applied to the current nesting level.
 local function nesting(f) -- (n: integer): document
     local doc = {
         tag = tag.Nesting,
@@ -248,6 +249,7 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
         elseif d.tag == tag.Text then
             return {
                 tag  = sTag.Text,
+                len  = d.len,
                 text = d.text,
                 sDoc = bestTypical(n, k + d.len, ds)
             }
@@ -262,7 +264,7 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
 
         elseif d.tag == tag.Cat then
             return bestTypical(
-                n, k, list.cons({i, d.fst}, list.cons({i, d.snd()}, ds)))
+                n, k, list.cons({i, d.fst}, list.cons({i, d.snd}, ds)))
 
         elseif d.tag == tag.Nest then
             local j = i + d.lv
@@ -419,8 +421,8 @@ local function scan(k, ds0)
         elseif d.tag == tag.Text then
             return {
                 tag  = sTag.Text,
-                text = d.text,
                 len  = d.len,
+                text = d.text,
                 sDoc = scan(k + d.len, ds)
             }
         elseif d.tag == tag.FlatAlt then
@@ -433,7 +435,7 @@ local function scan(k, ds0)
                 sDoc = scan(0, ds)
             }
         elseif d.tag == tag.Cat then
-            return scan(k, list.cons(d.fst, list.cons(d.snd(), ds)))
+            return scan(k, list.cons(d.fst, list.cons(d.snd, ds)))
 
         elseif d.tag == tag.Nest then
             return scan(k, list.cons(d.doc, ds))
@@ -579,7 +581,7 @@ function mt.__concat(fst, snd)
     local doc = {
         tag = tag.Cat,
         fst = fst,
-        snd = lazy.delay(function () return snd end)
+        snd = snd
     }
     return setmetatable(doc, mt)
 end
@@ -648,6 +650,9 @@ function pp.flatAlt(fst, snd)
     checkDoc(2, snd)
     local doc = {
         tag = tag.FlatAlt,
+        -- Are these worth being lazy? These are potentially expensive
+        -- to construct, but it would be too inconvenient if we
+        -- require our users to pass lazy documents to the function.
         fst = fst,
         snd = snd
     }
@@ -695,15 +700,15 @@ function pp.encloseSep(left, right, sep, ds)
     elseif #ds == 1 then
         return left .. ds[1] .. right
     else
-        local xs = {left}
+        local xs = {}
         for i, d in ipairs(ds) do
-            if i > 1 then
-                xs[#xs+1] = sep
+            if i == 1 then
+                xs[#xs+1] = left .. d
+            else
+                xs[#xs+1] = sep .. d
             end
-            xs[#xs+1] = d
         end
-        xs[#xs+1] = right
-        return pp.align(pp.cat(xs))
+        return pp.align(pp.cat(xs) .. right)
     end
 end
 
@@ -746,7 +751,7 @@ end
 -- The document (x // y) concatenates document x and y with a
 -- softbreak in between. This effectively puts x and y either right
 -- next to each other or underneath each other.
-function mt.__mod(x, y)
+function mt.__idiv(x, y)
     return x .. pp.softbreak .. y
 end
 
@@ -1060,10 +1065,7 @@ local _plain = {
         local doc = {
             tag = tag.Cat,
             fst = pp.plain(src.fst),
-            snd = lazy.delay(
-                function ()
-                    return pp.plain(src.snd())
-                end)
+            snd = pp.plain(src.snd)
         }
         return setmetatable(doc, mt)
     end,
