@@ -63,8 +63,9 @@ CONSTRUCTOR FUNCTIONS
 
         local val = Foo.Bar("some value")
 
-    Or alternatively, if all fields of a constructor are named, it can
-    also called with a table consisting of field names and values:
+    Or alternatively, if all of the fields of a constructor are named,
+    it can also be called with a table consisting of field names and
+    values:
 
         local val = Foo.Bar {fld1 = "some value"}
 
