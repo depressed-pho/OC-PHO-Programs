@@ -4,6 +4,7 @@ PHO's programs for OpenComputers mod
 
 ## Packages
 
+* [algebraic-data-types](algebraic-data-types): Algebraic data types in Lua
 * [containers](containers): Collection of container classes that suck less than tables
 * [lazy](lazy): Lazy evaluation and module loading
 * [mutex](mutex): Low-level synchronization based on the thread API
