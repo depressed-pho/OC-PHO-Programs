@@ -31,6 +31,9 @@ dist:
 	mkdir -p _dist/man/containers
 	mkdir -p _dist/test/containers
 	mkdir -p _dist/test/program-options
+	cp algebraic-data-types/lib/*.lua	_dist/lib
+	cp algebraic-data-types/man/*		_dist/man
+	cp algebraic-data-types/test/*.lua	_dist/test
 	cp ansi-terminal/lib/*.lua	_dist/lib
 	cp containers/lib/*.lua		_dist/lib/containers
 	cp containers/man/*		_dist/man/containers

@@ -1,0 +1,145 @@
+NAME
+    algebraic-data-types -- Algebraic data types in Lua
+
+SYNOPSIS
+    local adt = require("algebraic-data-types")
+
+    -- Define an algebraic data type. It is a sum of nullary
+    -- constructor "Nothing" and unary constructor "Just".
+    local maybe = adt.define(
+        adt.constructor("Nothing"),
+        adt.constructor("Just", adt.field()))
+
+    -- A value is created by calling a constructor.
+    local val = maybe.Just(42)
+
+    -- Fields of a product type can be retrieved via its "fields"
+    -- property.
+    print(val.fields[1]) -- prints "42".
+
+    -- Or by calling "fields" as a method.
+    local n = val:fields()
+    print(n) -- prints "42".
+
+    -- Pattern matching is barely possible. It's not my fault.
+    val:match {
+        Nothing = function ()
+            print("It was Nothing")
+        end,
+        Just = function (n)
+            print("It was Just "..n)
+        end
+    } -- prints "It was Just 42".
+
+DESCRIPTION
+    This module provides a mechanism to define algebraic data types.
+
+DEFINING DATA TYPES
+    adt.define(ctor1: constructor, ...): table
+        Generate an algebraic data type consisting of given
+        constructors created with adt.constructor(). The returned
+        table will have entries for each name of constructor and its
+        corresponding constructor function.
+
+        The generated table will not have a metatable. One can freely
+        add any properties to it or set a metatable without worrying
+        about breaking the system.
+
+    adt.constructor(name: string, [fld1: field, ...]): constructor
+        Create a constructor with a name and fields, created with
+        adt.field().
+
+    adt.field([name: string]): field
+        Create a field with an optional name.
+
+CONSTRUCTOR FUNCTIONS
+    Values of the table returned by adt.define() are constructor
+    functions. They can be called to construct values. One way to call
+    a constructor is to pass it field values:
+
+        local Foo = adt.define(
+            adt.constructor("Bar", adt.field("fld1"))
+            adt.constructor("Baz"))
+
+        local val = Foo.Bar("some value")
+
+    Or alternatively, if all fields of a constructor are named, it can
+    also called with a table consisting of field names and values:
+
+        local val = Foo.Bar {fld1 = "some value"}
+
+    As a special case, if a constructor has no fields, the constructor
+    itself can also be used as a value:
+
+        local val = Foo.Baz
+
+VALUE PROPERTIES AND METHODS
+
+    val.fields: table
+        Constructed values have a property "fields" which is a sequence of
+        field values. It can also be mutated by assigning new values:
+
+            local Foo = adt.define(
+                adt.constructor("Bar", adt.field("fld1"), adt.field("fld2"))
+                adt.constructor("Baz"))
+
+            local val = Foo.Bar(10, 20)
+            print(val.fields[1]) -- prints "10".
+            print(val.fields[2]) -- prints "20".
+
+            val.fields[1] = 100
+            print(val.fields[1]) -- prints "100".
+
+    val:fields(): ...
+        The property "fields" can also be called as a method. It will
+        return field values:
+
+            local val = Foo.Bar(10, 20)
+            local fld1, fld2 = val:fields()
+            print(fld1) -- prints "10".
+            print(fld2) -- prints "20".
+
+    val:is(ctor: function): boolean
+    val:is(type: table): boolean
+        The method :is() can be used to check if a value has been
+        constructed with a specific constructor:
+
+            local val = Foo.Bar(10, 20)
+            print(val:is(Foo.Bar)) -- prints "true"
+            print(val:is(Foo.Baz)) -- prints "false"
+
+        Or if it belongs to a specific algebraic type:
+
+            print(val:is(Foo)) -- prints "true"
+
+    val:match(cases: table): any
+        The method :match() can be used to perform a miserably crude
+        form of pattern matching:
+
+            local val = Foo.Baz
+            local ret = val:match {
+                Bar = function (fld1, fld2)
+                    return "got Bar: "..fld1..", "..fld2
+                end,
+                Baz = function ()
+                    return "got Baz"
+                end
+            }
+            print(ret) -- prints "got Baz"
+
+        The argument must be a table consisting of constructor names
+        and their corresponding functions. When there is a matching
+        constructor, its corresponding function will be called with
+        field values, and the result is returned by the method itself.
+        Otherwise an error will happen.
+
+    NAMED FIELDS
+        If a field has a name, its value can also be retrieved or
+        updated with a property having the same name of the field:
+
+            local val = Foo.Bar(10, 20)
+            print(val.fld1) -- prints "10"
+
+            val.fld1 = 100
+            print(val.fld1)      -- prints "100"
+            print(val.fields[1]) -- prints "100"
