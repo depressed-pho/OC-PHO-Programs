@@ -75,7 +75,6 @@ CONSTRUCTOR FUNCTIONS
         local val = Foo.Baz
 
 VALUE PROPERTIES AND METHODS
-
     val.fields: table
         Constructed values have a property "fields" which is a sequence of
         field values. It can also be mutated by assigning new values:
