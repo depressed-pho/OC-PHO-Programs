@@ -130,12 +130,12 @@ VALUE PROPERTIES AND METHODS
         The argument must be a table consisting of constructor names
         and their corresponding functions. When there is a matching
         constructor, its corresponding function will be called with
-        field values, and the result is returned by the method itself.
+        field values, whose result will returned by the method itself.
         Otherwise an error will happen.
 
     NAMED FIELDS
         If a field has a name, its value can also be retrieved or
-        updated with a property having the same name of the field:
+        updated via a property having the same name of the field:
 
             local val = Foo.Bar(10, 20)
             print(val.fld1) -- prints "10"
