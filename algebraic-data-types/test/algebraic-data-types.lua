@@ -7,23 +7,37 @@ local adt = t:requireOK('algebraic-data-types') or t:bailOut("Can't load algebra
 t:subtest(
     "Maybe a = Nothing | Just a",
     function ()
-        t:plan(8)
+        t:plan(10)
 
-        local maybe = adt.define(
+        local function __tostring(m)
+            return m:match {
+                Nothing = function ()
+                    return "Nothing"
+                end,
+                Just = function (x)
+                    return "Just("..tostring(x)..")"
+                end
+            }
+        end
+
+        local Maybe = adt.define(
             adt.constructor('Nothing'),
-            adt.constructor('Just', adt.field()))
+            adt.constructor('Just', adt.field()),
+            adt.metamethod('__tostring', __tostring))
 
-        t:ok(maybe.Just(42):is(maybe), 'Just(42):is(Maybe)')
+        t:ok(Maybe.Just(42):is(Maybe), 'Just(42):is(Maybe)')
 
-        t:ok(maybe.Just(42):is(maybe.Just), 'Just(42):is(Just)')
-        t:ok(maybe.Nothing:is(maybe.Nothing), 'Nothing:is(Nothing)')
-        t:ok(not maybe.Just(42):is(maybe.Nothing), 'not Just(42):is(Nothing)')
+        t:ok(Maybe.Just(42):is(Maybe.Just), 'Just(42):is(Just)')
+        t:ok(Maybe.Nothing:is(Maybe.Nothing), 'Nothing:is(Nothing)')
+        t:ok(not Maybe.Just(42):is(Maybe.Nothing), 'not Just(42):is(Nothing)')
 
-        t:isDeeply(maybe.Just(42).fields[1], 42, 'Just(42).fields')
-        t:is(maybe.Just(42):fields(), 42, 'Just(42):fields()')
-        t:isDeeply(#maybe.Nothing.fields, 0, 'Nothing.fields')
+        t:isDeeply(Maybe.Just(42).fields[1], 42, 'Just(42).fields')
+        t:is(Maybe.Just(42):fields(), 42, 'Just(42):fields()')
+        t:isDeeply(#Maybe.Nothing.fields, 0, 'Nothing.fields')
 
-        local ret = maybe.Just(42):match {
+        t:is(tostring(Maybe.Just(42)), "Just(42)", 'metamethod')
+
+        local ret = Maybe.Just(42):match {
             Nothing = function ()
                 return -1
             end,
@@ -32,6 +46,15 @@ t:subtest(
             end
         }
         t:is(ret, 42, 'Just(42):match()')
+
+        Maybe.Just(42):match {
+            Nothing = function ()
+                t:fail('default match')
+            end,
+            _ = function (it)
+                t:ok(it:is(Maybe.Just), 'default match')
+            end
+        }
     end)
 
 t:subtest(
@@ -39,17 +62,17 @@ t:subtest(
     function ()
         t:plan(4)
 
-        local list = adt.define(
+        local List = adt.define(
             adt.constructor('Nil'),
             adt.constructor('Cons', adt.field('head'), adt.field('tail')))
 
-        local ab = list.Cons('a', list.Cons('b', list.Nil))
+        local ab = List.Cons('a', List.Cons('b', List.Nil))
         t:is(ab.head, 'a', 'ab.head')
         t:is(ab.tail.head, 'b', 'ab.tail.head')
 
-        ab.tail.tail = list.Cons('c', list.Nil)
+        ab.tail.tail = List.Cons('c', List.Nil)
         t:is(ab.tail.tail.fields[1], 'c', 'ab.tail.tail.fields[1]')
 
-        local a = list.Cons {head = 42, tail = list.Nil}
+        local a = List.Cons {head = 42, tail = List.Nil}
         t:is(a.fields[1], 42, 'a.fields[1]')
     end)

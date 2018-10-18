@@ -28,6 +28,7 @@ dist:
 	mkdir -p _dist/lib/containers
 	mkdir -p _dist/lib/tap/parser
 	mkdir -p _dist/lib/program-options
+	mkdir -p _dist/lib/wl-pprint
 	mkdir -p _dist/man/containers
 	mkdir -p _dist/test/containers
 	mkdir -p _dist/test/program-options
@@ -49,7 +50,8 @@ dist:
 	cp program-options/lib/program-options.lua	_dist/lib
 	cp program-options/lib/*.lua	_dist/lib/program-options
 	cp program-options/test/*.lua	_dist/test/program-options
-	cp wl-pprint/lib/*.lua		_dist/lib
+	cp wl-pprint/lib/wl-pprint.lua	_dist/lib
+	cp wl-pprint/lib/*.lua		_dist/lib/wl-pprint
 	cp wl-pprint/test/*.lua		_dist/test
 	tar -cvf OC-PHO-Programs.tar -C _dist .
 	rm -rf _dist

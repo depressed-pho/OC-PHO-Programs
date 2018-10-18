@@ -6,12 +6,12 @@ SYNOPSIS
 
     -- Define an algebraic data type. It is a sum of nullary
     -- constructor "Nothing" and unary constructor "Just".
-    local maybe = adt.define(
+    local Maybe = adt.define(
         adt.constructor("Nothing"),
         adt.constructor("Just", adt.field()))
 
     -- A value is created by calling a constructor.
-    local val = maybe.Just(42)
+    local val = Maybe.Just(42)
 
     -- Fields of a product type can be retrieved via its "fields"
     -- property.
@@ -41,6 +41,10 @@ DEFINING DATA TYPES
         table will have entries for each name of constructor and its
         corresponding constructor function.
 
+        One can also pass metamethods created with adt.metamethod() as
+        arguments. Those metamethods will be injected into values of
+        the type to be defined.
+
         The generated table will not have a metatable. One can freely
         add any properties to it or set a metatable without worrying
         about breaking the system.
@@ -51,6 +55,32 @@ DEFINING DATA TYPES
 
     adt.field([name: string]): field
         Create a field with an optional name.
+
+    adt.metamethod(name: string, func: function): metamethod
+        Create a metamethod with a name and a function. Note that the
+        following metamethods are reserved for internal use and cannot
+        be replaced:
+        * __call
+        * __index
+        * __newindex
+
+            local function __tostring(m)
+                return m:match {
+                    Nothing = function ()
+                        return "Nothing"
+                    end,
+                    Just = function (x)
+                        return "Just("..tostring(x)..")"
+                    end
+                }
+            end
+
+            local Maybe = adt.define(
+                adt.constructor("Nothing"),
+                adt.constructor("Just", adt.field()),
+                adt.metamethod("__tostring", __tostring)
+
+            print(Maybe.Just(42)) -- prints "Just(42)"
 
 CONSTRUCTOR FUNCTIONS
     Values of the table returned by adt.define() are constructor
@@ -123,6 +153,9 @@ VALUE PROPERTIES AND METHODS
                 end,
                 Baz = function ()
                     return "got Baz"
+                end,
+                _ = function (foo)
+                    error("default case")
                 end
             }
             print(ret) -- prints "got Baz"
@@ -131,7 +164,9 @@ VALUE PROPERTIES AND METHODS
         and their corresponding functions. When there is a matching
         constructor, its corresponding function will be called with
         field values, whose result will returned by the method itself.
-        Otherwise an error will happen.
+        When there isn't a matching constructor, but a default case
+        named "_" exists, then its corresponding function will be
+        called with the value itself. Otherwise an error will happen.
 
     NAMED FIELDS
         If a field has a name, its value can also be retrieved or

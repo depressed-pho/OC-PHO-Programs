@@ -1,39 +1,13 @@
 local ansi = require('ansi-terminal')
 local lazy = require('lazy')
 local list = require('containers/list')
-local pp = {}
-local mt = {}
 
-local tag = {
-    Fail    =  0,
-    Empty   =  1,
-    Char    =  2,
-    Text    =  3,
-    Line    =  4,
-    -- Render the first doc, but when flattened, render the second.
-    FlatAlt =  5,
-    Cat     =  6,
-    Nest    =  7,
-    -- Invariant: first lines of first doc is no shorter than the
-    -- first lines of the second doc.
-    Union   =  8,
-    Column  =  9,
-    Nesting = 10,
-    -- Introduces coloring around the embedded document.
-    Color         = 11,
-    Intensify     = 12,
-    Italicize     = 13,
-    Underline     = 14,
-    RestoreFormat = 15
-}
+local Doc  = require('wl-pprint/document')
+local SDoc = require('wl-pprint/simple-document')
+
+local pp = {}
 
 -- Private functions
-local function checkDoc(pos, arg)
-    if getmetatable(arg) ~= mt then
-        error("bad argument #"..pos.." (document expected, got "..type(arg)..")", 3)
-    end
-end
-
 local function spaces(n)
     if n <= 0 then
         return ""
@@ -52,149 +26,6 @@ do
         wlen = string.len
     end
 end
-
--- luacheck: ignore flatten
-local flatten -- Forward declaration
-local _flatten = {
-    [tag.Line] = function ()
-        return setmetatable({ tag = tag.Fail }, mt)
-    end,
-    [tag.FlatAlt] = function (src)
-        return src.snd
-    end,
-    [tag.Cat] = function (src)
-        local doc = {
-            tag = tag.Cat,
-            fst = flatten(src.fst),
-            snd = flatten(src.snd)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Nest] = function (src)
-        local doc = {
-            tag = tag.Nest,
-            lv  = src.lv,
-            doc = flatten(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Union] = function (src)
-        return flatten(src.fst())
-    end,
-    [tag.Column] = function (src)
-        local doc = {
-            tag = tag.Column,
-            f   = function (k)
-                return flatten(src.f(k))
-            end
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Nesting] = function (src)
-        local doc = {
-            tag = tag.Nesting,
-            f   = function (k)
-                return flatten(src.f(k))
-            end
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Color] = function (src)
-        local doc = {
-            tag       = tag.Color,
-            layer     = src.layer,
-            intensity = src.intensity,
-            color     = src.color,
-            doc       = flatten(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Intensify] = function (src)
-        local doc = {
-            tag       = tag.Intensify,
-            intensity = src.intensity,
-            doc       = flatten(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Italicize] = function (src)
-        local doc = {
-            tag        = tag.Italicize,
-            italicized = src.italicized,
-            doc        = flatten(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Underline] = function (src)
-        local doc = {
-            tag       = tag.Underline,
-            underline = src.underline,
-            doc       = flatten(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end
-}
-function flatten(doc)
-    local f = _flatten[doc.tag]
-    if f then
-        return f(doc)
-    else
-        return doc
-    end
-end
-
--- Generate a document with a function and render it. The function
--- will be applied to the current column position.
-local function column(f) -- (n: integer): document
-    local doc = {
-        tag = tag.Column,
-        f   = f
-    }
-    return setmetatable(doc, mt)
-end
-
--- Generate a document with a function and render it. The function
--- will be applied to the current nesting level.
-local function nesting(f) -- (n: integer): document
-    local doc = {
-        tag = tag.Nesting,
-        f   = f
-    }
-    return setmetatable(doc, mt)
-end
-
-local function fold(f, ds)
-    if #ds == 0 then
-        return pp.empty
-    elseif #ds == 1 then
-        return ds[1]
-    else
-        local ret = ds[1]
-        for i = 2, #ds do
-            ret = f(ret, ds[i])
-        end
-        return ret
-    end
-end
-
-local function width(doc, f) -- (n: integer): document
-    return column(
-        function (k1)
-            return doc .. column(
-                function (k2)
-                    return f(k2 - k1)
-                end)
-        end)
-end
-
-local sTag = {
-    Fail  = 0,
-    Empty = 1,
-    Char  = 2,
-    Text  = 3,
-    Line  = 4,
-    SGR   = 5
-}
 
 local function nicest(r, w, fits, n, k, x, y)
     -- r = ribbon width, w = page width,
@@ -215,7 +46,7 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
         return best(r, w, fits, n1, k1, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds1)
     end
     if list.null(ds0) then
-        return {tag = sTag.Empty}
+        return SDoc.SEmpty
     else
         -- Indentation and document
         local i, d = table.unpack(list.head(ds0))
@@ -223,132 +54,108 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
 
         local dsRestore = lazy.delay(
             function ()
-                local restore = {
-                    tag   = tag.RestoreFormat,
-                    mb_fc = mb_fc,
-                    mb_bc = mb_bc,
-                    mb_in = mb_in,
-                    mb_it = mb_it,
-                    mb_un = mb_un
-                }
-                return list.cons({i, setmetatable(restore, mt)}, ds)
+                local restore = Doc.RestoreFormat(mb_fc, mb_bc, mb_in, mb_it, mb_un)
+                return list.cons({i, restore}, ds)
             end)
 
-        if d.tag == tag.Fail then
-            return {tag = sTag.Fail}
-
-        elseif d.tag == tag.Empty then
-            return bestTypical(n, k, ds)
-
-        elseif d.tag == tag.Char then
-            return {
-                tag  = sTag.Char,
-                char = d.char,
-                sDoc = bestTypical(n, k + 1, ds)
-            }
-        elseif d.tag == tag.Text then
-            return {
-                tag  = sTag.Text,
-                len  = d.len,
-                text = d.text,
-                sDoc = bestTypical(n, k + d.len, ds)
-            }
-        elseif d.tag == tag.Line then
-            return {
-                tag  = sTag.Line,
-                lv   = i,
-                sDoc = bestTypical(i, i, ds)
-            }
-        elseif d.tag == tag.FlatAlt then
-            return bestTypical(n, k, list.cons({i, d.fst}, ds))
-
-        elseif d.tag == tag.Cat then
-            return bestTypical(
-                n, k, list.cons({i, d.fst}, list.cons({i, d.snd}, ds)))
-
-        elseif d.tag == tag.Nest then
-            local j = i + d.lv
-            return bestTypical(n, k, list.cons({j, d.doc}, ds))
-
-        elseif d.tag == tag.Union then
-            return nicest(r, w, fits, n, k,
-                          bestTypical(n, k, list.cons({i, d.fst()}, ds)),
-                          lazy.delay(
-                              function ()
-                                  return bestTypical(n, k, list.cons({i, d.snd()}, ds))
-                              end))
-
-        elseif d.tag == tag.Column then
-            return bestTypical(n, k, list.cons({i, d.f(k)}, ds))
-
-        elseif d.tag == tag.Nesting then
-            return bestTypical(n, k, list.cons({i, d.f(i)}, ds))
-
-        elseif d.tag == tag.Color then
-            local mb_fc1, mb_bc1
-            if d.layer == ansi.ConsoleLayer.Background then
-                mb_fc1 = mb_fc
-                mb_bc1 = {d.intensity, d.color}
-            else
-                mb_fc1 = {d.intensity, d.color}
-                mb_bc1 = mb_bc
+        return d:match {
+            Fail = function ()
+                return SDoc.SFail
+            end,
+            Empty = function ()
+                return bestTypical(n, k, ds)
+            end,
+            Char = function (char)
+                return SDoc.SChar(char, bestTypical(n, k+1, ds))
+            end,
+            Text = function (len, text)
+                return SDoc.SText(len, text, bestTypical(n, k+len, ds))
+            end,
+            Line = function ()
+                return SDoc.SLine(i, bestTypical(i, i, ds))
+            end,
+            FlatAlt = function (fst, _)
+                return bestTypical(n, k, list.cons({i, fst}, ds))
+            end,
+            Cat = function (fst, snd)
+                return bestTypical(
+                    n, k, list.cons({i, fst}, list.cons({i, snd}, ds)))
+            end,
+            Nest = function (lv, doc)
+                return bestTypical(n, k, list.cons({i+lv, doc}, ds))
+            end,
+            Union = function (fst, snd)
+                return nicest(r, w, fits, n, k,
+                              bestTypical(n, k, list.cons({i, fst()}, ds)),
+                              lazy.delay(
+                                  function ()
+                                      return bestTypical(n, k, list.cons({i, snd()}, ds))
+                                  end))
+            end,
+            Column = function (f)
+                return bestTypical(n, k, list.cons({i, f(k)}, ds))
+            end,
+            Nesting = function (f)
+                return bestTypical(n, k, list.cons({i, f(i)}, ds))
+            end,
+            Color = function (layer, intensity, color, doc)
+                local mb_fc1, mb_bc1
+                if layer:is(ansi.ConsoleLayer.Background) then
+                    mb_fc1 = mb_fc
+                    mb_bc1 = {intensity, color}
+                else
+                    mb_fc1 = {intensity, color}
+                    mb_bc1 = mb_bc
+                end
+                return SDoc.SSGR(
+                    {ansi.SGR.SetColor(layer, intensity, color)},
+                    best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in, mb_it, mb_un,
+                         list.cons({i, doc}, dsRestore())))
+            end,
+            Intensify = function (intensity, doc)
+                return SDoc.SSGR(
+                    {ansi.SGR.SetConsoleIntensity(intensity)},
+                    best(r, w, fits, n, k, mb_fc, mb_bc, intensity, mb_it, mb_un,
+                         list.cons({i, doc}, dsRestore())))
+            end,
+            Italicize = function (italicized, doc)
+                return SDoc.SSGR(
+                    {ansi.SGR.SetItalicized(italicized)},
+                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, italicized, mb_un,
+                         list.cons({i, doc}, dsRestore())))
+            end,
+            Underline = function (underline, doc)
+                return SDoc.SSGR(
+                    {ansi.SGR.SetUnderlining(underline)},
+                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, underline,
+                         list.cons({i, doc}, dsRestore())))
+            end,
+            RestoreFormat = function (mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1)
+                local sgrs = {ansi.SGR.Reset}
+                if mb_fc1 then
+                    table.insert(sgrs, ansi.SGR.SetColor(
+                                     ansi.SGR.ConsoleLayer.Foreground,
+                                     table.unpack(mb_fc1)))
+                end
+                if mb_bc1 then
+                    table.insert(sgrs, ansi.SGR.SetColor(
+                                     ansi.SGR.ConsoleLayer.Background,
+                                     table.unpack(mb_bc1)))
+                end
+                if mb_in1 then
+                    table.insert(sgrs, ansi.SGR.SetConsoleIntensity(mb_in1))
+                end
+                if mb_it1 then
+                    table.insert(sgrs, ansi.SGR.SetItalicized(mb_it1))
+                end
+                if mb_un1 then
+                    table.insert(sgrs, ansi.SGR.SetUnderlining(mb_un1))
+                end
+                return SDoc.SSGR(
+                    sgrs,
+                    best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1, ds))
             end
-            return {
-                tag  = sTag.SGR,
-                SGR  = {ansi.SGR.SetColor(d.layer, d.indensity, d.color)},
-                sDoc = best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in, mb_it, mb_un,
-                            list.cons({i, d.doc}, dsRestore()))
-            }
-        elseif d.tag == tag.Intensify then
-            return {
-                tag  = sTag.SGR,
-                SGR  = {ansi.SGR.SetConsoleIntensity(d.intensity)},
-                sDoc = best(r, w, fits, n, k, mb_fc, mb_bc, d.intensity, mb_it, mb_un,
-                            list.cons({i, d.doc}, dsRestore()))
-            }
-        elseif d.tag == tag.Italicize then
-            return {
-                tag  = sTag.SGR,
-                SGR  = {ansi.SGR.SetItalicized(d.italicized)},
-                sDoc = best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, d.italicized, mb_un,
-                            list.cons({i, d.doc}, dsRestore()))
-            }
-        elseif d.tag == tag.Underline then
-            return {
-                tag  = sTag.SGR,
-                SGR  = {ansi.SGR.SetUnderlining(d.underline)},
-                sDoc = best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, d.underline,
-                            list.cons({i, d.doc}, dsRestore()))
-            }
-        elseif d.tag == tag.RestoreFormat then
-            local sgrs = {ansi.SGR.Reset}
-            if d.mb_fc then
-                table.insert(sgrs, ansi.SGR.SetColor(
-                                 ansi.SGR.ConsoleLayer.Foreground,
-                                 table.unpack(d.mb_fc)))
-            end
-            if d.mb_bc then
-                table.insert(sgrs, ansi.SGR.SetColor(
-                                 ansi.SGR.ConsoleLayer.Background,
-                                 table.unpack(d.mb_bc)))
-            end
-            if d.mb_in then
-                table.insert(sgrs, ansi.SGR.SetConsoleIntensity(d.mb_in))
-            end
-            if d.mb_it then
-                table.insert(sgrs, ansi.SGR.SetItalicized(d.mb_it))
-            end
-            if d.mb_un then
-                table.insert(sgrs, ansi.SGR.SetUnderlining(d.mb_un))
-            end
-            return {
-                tag  = sTag.SGR,
-                SGR  = sgrs,
-                sDoc = best(r, w, fits, n, k, d.mb_fc, d.mb_bc, d.mb_in, d.mb_it, d.mb_un, ds)
-            }
-        else
-            error("Internal error: unknown document tag: "..d.tag)
-        end
+        }
     end
 end
 local function renderFits(fits, rfrac, w, x)
@@ -357,146 +164,61 @@ local function renderFits(fits, rfrac, w, x)
     return best(r, w, fits, 0, 0, nil, nil, nil, nil, nil, list.of({0, x}))
 end
 
--- fits1 does 1 line lookahead.
-local function fits1(p, m, w, d)
-    if w < 0 then return false
-    elseif d.tag == sTag.Fail  then return false
-    elseif d.tag == sTag.Empty then return true
-    elseif d.tag == sTag.Char  then return fits1(p, m, w - 1, d.sDoc)
-    elseif d.tag == sTag.Text  then return fits1(p, m, w - d.len, d.sDoc)
-    elseif d.tag == sTag.Line  then return true
-    elseif d.tag == sTag.SGR   then return fits1(p, m, w, d.sDoc)
-    else
-        error("Internal error: unknown sDoc tag: "..d.tag)
-    end
-end
-
--- fitsR has a little more lookahead: assuming that nesting roughly
--- corresponds to syntactic depth, fitsR checks that not only the
--- current line fits, but the entire syntactic structure being
--- formatted at this level of indentation fits. If we were to remove
--- the second case for sTag.Line, we would check that not only the
--- current structure fits, but also the rest of the document, which
--- would be slightly more intelligent but would have exponential
--- runtime (and is prohibitively expensive in practice).
-local function fitsR(p, m, w, d)
-    -- p = pagewidth
-    -- m = minimum nesting level to fit in
-    -- w = the width in which to fit the first line
-    if w < 0 then return false
-    elseif d.tag == sTag.Fail  then return false
-    elseif d.tag == sTag.Empty then return false
-    elseif d.tag == sTag.Char  then return fitsR(p, m, w - 1, d.sDoc)
-    elseif d.tag == sTag.Text  then return fitsR(p, m, w - d.len, d.sDoc)
-    elseif d.tag == sTag.Line  then
-        if m < 1 then
-            return fitsR(p, m, p - 1, d.sDoc)
-        else
-            return true
-        end
-    elseif d.tag == sTag.SGR   then return fitsR(p, m, w, d.sDoc)
-    else
-        error("Internal error: unknown sDoc tag: "..d.tag)
-    end
-end
-
 local function scan(k, ds0)
     if list.null(ds0) then
-        return {tag = sTag.Empty}
+        return SDoc.SEmpty
     else
         local d, ds = list.uncons(ds0)
-
-        if d.tag == tag.Fail then
-            return {tag = sTag.Fail}
-
-        elseif d.tag == tag.Empty then
-            return scan(k, ds)
-
-        elseif d.tag == tag.Char then
-            return {
-                tag  = sTag.Char,
-                char = d.char,
-                sDoc = scan(k + 1, ds)
-            }
-        elseif d.tag == tag.Text then
-            return {
-                tag  = sTag.Text,
-                len  = d.len,
-                text = d.text,
-                sDoc = scan(k + d.len, ds)
-            }
-        elseif d.tag == tag.FlatAlt then
-            return scan(k, list.cons(d.fst, ds))
-
-        elseif d.tag == tag.Line then
-            return {
-                tag  = sTag.Line,
-                lv   = 0,
-                sDoc = scan(0, ds)
-            }
-        elseif d.tag == tag.Cat then
-            return scan(k, list.cons(d.fst, list.cons(d.snd, ds)))
-
-        elseif d.tag == tag.Nest then
-            return scan(k, list.cons(d.doc, ds))
-
-        elseif d.tag == tag.Union then
-            return scan(k, list.cons(d.snd(), ds))
-
-        elseif d.tag == tag.Column then
-            return scan(k, list.cons(d.f(k), ds))
-
-        elseif d.tag == tag.Nesting then
-            return scan(k, list.cons(d.f(0), ds))
-
-        elseif d.tag == tag.Color then
-            return scan(k, list.cons(d.doc, ds))
-
-        elseif d.tag == tag.Intensify then
-            return scan(k, list.cons(d.doc, ds))
-
-        elseif d.tag == tag.Italicize then
-            return scan(k, list.cons(d.doc, ds))
-
-        elseif d.tag == tag.Underline then
-            return scan(k, list.cons(d.doc, ds))
-
-        elseif d.tag == tag.RestoreFormat then
-            return scan(k, ds)
-
-        else
-            error("Internal error: unknown document tag: "..d.tag)
-        end
-    end
-end
-local function renderCompact(doc)
-    return scan(0, list.of(doc))
-end
-
-local function displayS(color, d)
-    if d.tag == sTag.Fail then
-        error("Internal error: sTag.Fail can not appear uncaught in a rendered sDoc")
-
-    elseif d.tag == sTag.Empty then
-        return ""
-
-    elseif d.tag == sTag.Char then
-        return d.char .. displayS(color, d.sDoc)
-
-    elseif d.tag == sTag.Text then
-        return d.text .. displayS(color, d.sDoc)
-
-    elseif d.tag == sTag.Line then
-        return '\n' .. spaces(d.lv) .. displayS(color, d.sDoc)
-
-    elseif d.tag == sTag.SGR then
-        if color then
-            return ansi.setSGRCode(d.SGR) .. displayS(color, d.sDoc)
-        else
-            return displayS(color, d.sDoc)
-        end
-    else
-        error("Internal error: unknown sDoc tag: "..d.tag)
+        return d:match {
+            Fail = function ()
+                return SDoc.SFail
+            end,
+            Empty = function ()
+                return scan(k, ds)
+            end,
+            Char = function (char)
+                return SDoc.SChar(char, scan(k+1, ds))
+            end,
+            Text = function (len, text)
+                return SDoc.SText(len, text, scan(k+len, ds))
+            end,
+            FlatAlt = function (fst, _)
+                return scan(k, list.cons(fst, ds))
+            end,
+            Line = function ()
+                return SDoc.SLine(0, scan(0, ds))
+            end,
+            Cat = function (fst, snd)
+                return scan(k, list.cons(fst, list.cons(snd, ds)))
+            end,
+            Nest = function (_, doc)
+                return scan(k, list.cons(doc, ds))
+            end,
+            Union = function (_, snd)
+                return scan(k, list.cons(snd(), ds))
+            end,
+            Column = function (f)
+                return scan(k, list.cons(f(k), ds))
+            end,
+            Nesting = function (f)
+                return scan(k, list.cons(f(0), ds))
+            end,
+            Color = function (_, _, _, doc)
+                return scan(k, list.cons(doc, ds))
+            end,
+            Intensify = function (_, doc)
+                return scan(k, list.cons(doc, ds))
+            end,
+            Italicize = function (_, doc)
+                return scan(k, list.cons(doc, ds))
+            end,
+            Underline = function (_, doc)
+                return scan(k, list.cons(doc, ds))
+            end,
+            RestoreFormat = function (_, _, _, _, _)
+                return scan(k, ds)
+            end
+        }
     end
 end
 
@@ -505,7 +227,7 @@ end
 -- The empty document is, indeed, empty. Although empty has no
 -- content, it does have a 'height' of 1 and behaves exactly like
 -- text("") (and is therefore not a unit of '&').
-pp.empty = setmetatable({ tag = tag.Empty }, mt)
+pp.empty = Doc.Empty
 
 -- The document char(c) contains the literal character c.
 function pp.char(char)
@@ -515,11 +237,7 @@ function pp.char(char)
     else
         checkArg(1, char, "string")
         assert(#char == 1)
-        local doc = {
-            tag  = tag.Char,
-            char = char
-        }
-        return setmetatable(doc, mt)
+        return Doc.Char(char)
     end
 end
 
@@ -533,12 +251,7 @@ function pp.text(text)
     else
         checkArg(1, text, "string")
         assert(text:find("\n") == nil)
-        local doc = {
-            tag  = tag.Text,
-            len  = wlen(text),
-            text = text
-        }
-        return setmetatable(doc, mt)
+        return Doc.Text(wlen(text), text)
     end
 end
 
@@ -574,89 +287,31 @@ function pp.boolean(bool)
     return pp.text(tostring(bool))
 end
 
--- The operator .. concatenates two documents.
-function mt.__concat(fst, snd)
-    checkDoc(1, fst)
-    checkDoc(2, snd)
-    local doc = {
-        tag = tag.Cat,
-        fst = fst,
-        snd = snd
-    }
-    return setmetatable(doc, mt)
-end
-
 -- The document (nest i x) renders document x with the current
 -- indentation level increased by i (See also hang, align and indent).
-function pp.nest(lv, d)
+function pp.nest(lv, doc)
     checkArg(1, lv, "number")
-    checkDoc(2, d)
-    local doc = {
-        tag = tag.Nest,
-        lv  = lv,
-        doc = d
-    }
-    return setmetatable(doc, mt)
+    Doc.checkDoc(2, doc)
+    return Doc.Nest(lv, doc)
 end
 
--- A linebreak that will never be flattened; it is guaranteed to
--- render as a newline.
-pp.hardline = setmetatable({ tag = tag.Line }, mt)
-
--- The line document advances to the next line and indents to the
--- current nesting level. Document line behaves like text(" ") if the
--- line break is undone by group().
-pp.line = setmetatable(
-    { tag = tag.FlatAlt,
-      fst = pp.hardline,
-      snd = pp.char(' ')
-    }, mt)
-
--- The linebreak document advances to the next line and indents to the
--- current nesting level. Document linebreak behaves like 'empty' if
--- the line break is undone by group().
-pp.linebreak = setmetatable(
-    { tag = tag.FlatAlt,
-      fst = pp.hardline,
-      snd = pp.empty
-    }, mt)
-
--- The group combinator is used to specify alternative layouts. The
--- document group(x) undoes all line breaks in document x. The
--- resulting line is added to the current line if that fits the
--- page. Otherwise, the document x is rendered without any changes.
-function pp.group(d)
-    checkDoc(1, d)
-    local doc = {
-        tag = tag.Union,
-        fst = lazy.delay(function () return flatten(d) end),
-        snd = lazy.delay(function () return d end)
-    }
-    return setmetatable(doc, mt)
-end
-
--- The document softline behaves like 'space' if the resulting output
--- fits the page, otherwise it behaves like 'line'.
-pp.softline = pp.group(pp.line)
-
--- The document softbreak behaves like 'empty' if the resulting output
--- fits the page, otherwise it behaves like 'line'.
-pp.softbreak = pp.group(pp.linebreak)
+-- Re-export some combinators.
+pp.hardline  = Doc.hardline
+pp.line      = Doc.line
+pp.linebreak = Doc.linebreak
+pp.group     = Doc.group
+pp.softline  = Doc.softline
+pp.softbreak = Doc.softbreak
 
 -- A document that is normally rendered as the first argument, but
 -- when flattened, is rendered as the second document.
 function pp.flatAlt(fst, snd)
-    checkDoc(1, fst)
-    checkDoc(2, snd)
-    local doc = {
-        tag = tag.FlatAlt,
-        -- Are these worth being lazy? These are potentially expensive
-        -- to construct, but it would be too inconvenient if we
-        -- require our users to pass lazy documents to the function.
-        fst = fst,
-        snd = snd
-    }
-    return setmetatable(doc, mt)
+    Doc.checkDoc(1, fst)
+    Doc.checkDoc(2, snd)
+    -- Are these worth being lazy? These are potentially expensive to
+    -- construct, but it would be too inconvenient if we require our
+    -- users to pass lazy documents to the function.
+    return Doc.FlatAlt(fst, snd)
 end
 
 -- Alignment combinators
@@ -664,9 +319,9 @@ end
 -- The document align(x) renders document x with the nesting level set
 -- to the current column.
 function pp.align(doc)
-    return column(
+    return Doc.Column(
         function (k)
-            return nesting(
+            return Doc.Nesting(
                 function (i)
                     return pp.nest(k-i, doc)
                 end)
@@ -691,10 +346,10 @@ end
 -- page. Otherwise they are aligned vertically. All separators are put
 -- in front of the elements.
 function pp.encloseSep(left, right, sep, ds)
-    checkDoc(1, left)
-    checkDoc(2, right)
-    checkDoc(3, sep)
-    checkArg(4, ds, "table") -- [document]
+    Doc.checkDoc(1, left)
+    Doc.checkDoc(2, right)
+    Doc.checkDoc(3, sep)
+    checkArg(4, ds, "table") -- [Doc]
     if #ds == 0 then
         return left .. right
     elseif #ds == 1 then
@@ -717,42 +372,8 @@ end
 -- that fits the page. Otherwise they are aligned vertically. All
 -- comma separators are put in front of the elements.
 function pp.list(ds)
-    checkArg(1, ds, "table") -- [document]
+    checkArg(1, ds, "table") -- [Doc]
     return pp.encloseSep(pp.lbrace, pp.rbrace, pp.comma, ds)
-end
-
--- Operators
-
--- The document (x + y) concatenates document x and y with a 'space'
--- in between.
-function mt.__add(x, y)
-    return x .. pp.space .. y
-end
-
--- The document (x & y) concatenates document x and y with a 'line' in
--- between.
-function mt.__band(x, y)
-    return x .. pp.line .. y
-end
-
--- The document (x / y) concatenates document x and y with a 'softline'
--- in between. This effectively puts x and y either next to each other
--- (with a space in between) or underneath each other.
-function mt.__div(x, y)
-    return x .. pp.softline .. y
-end
-
--- The document (x % y) concatenates document x and y with a
--- 'linebreak' in between.
-function mt.__mod(x, y)
-    return x .. pp.linebreak .. y
-end
-
--- The document (x // y) concatenates document x and y with a
--- softbreak in between. This effectively puts x and y either right
--- next to each other or underneath each other.
-function mt.__idiv(x, y)
-    return x .. pp.softbreak .. y
 end
 
 -- List combinators
@@ -760,24 +381,24 @@ end
 -- The document hsep(xs) concatenates all documents xs horizontally
 -- with '+'.
 function pp.hsep(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x + y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x + y end, ds)
 end
 
 -- The document vsep(xs) concatenates all documents xs vertically with
 -- '&'. If a group() undoes the line breaks inserted by vsep, all
 -- documents are separated with a 'space'.
 function pp.vsep(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x & y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x & y end, ds)
 end
 
 -- The document fillSep(xs) concatenates documents xs horizontally
 -- with '+' as long as its fits the page, than inserts a line and
 -- continues doing that for all documents in xs.
 function pp.fillSep(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x / y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x / y end, ds)
 end
 
 -- The document sep(xs) concatenates all documents xs either
@@ -789,24 +410,24 @@ end
 -- The document hcat(xs) concatenates all documents xs horizontally
 -- with '..'.
 function pp.hcat(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x .. y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x .. y end, ds)
 end
 
 -- The document vcat(xs) concatenates all documents xs vertically with
 -- '%'. If a group undoes the line breaks inserted by vcat, all
 -- documents are directly concatenated.
 function pp.vcat(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x % y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x % y end, ds)
 end
 
 -- The document fillCat(xs) concatenates documents xs horizontally
 -- with '..' as long as its fits the page, than inserts a 'linebreak'
 -- and continues doing that for all documents in xs.
 function pp.fillCat(ds)
-    checkArg(1, ds, "table") -- [document]
-    return fold(function (x, y) return x // y end, ds)
+    checkArg(1, ds, "table") -- [Doc]
+    return Doc.fold(function (x, y) return x // y end, ds)
 end
 
 -- The document cat(xs) concatenates all documents xs either
@@ -819,8 +440,8 @@ end
 -- punctuate(p, xs) concatenates all documents in xs with document p
 -- except for the last document.
 function pp.punctuate(p, ds)
-    checkDoc(1, p)
-    checkArg(2, ds, "table") -- [document]
+    Doc.checkDoc(1, p)
+    checkArg(2, ds, "table") -- [Doc]
     if #ds == 0 then
         return {}
     elseif #ds == 1 then
@@ -842,8 +463,8 @@ end
 -- nothing is appended.
 function pp.fill(n, doc)
     checkArg(1, n, "number")
-    checkDoc(2, doc)
-    return width(
+    Doc.checkDoc(2, doc)
+    return Doc.width(
         doc,
         function (w)
             if w >= n then
@@ -860,8 +481,8 @@ end
 -- 'line' is appended.
 function pp.fillBreak(n, doc)
     checkArg(1, n, "number")
-    checkDoc(2, doc)
-    return width(
+    Doc.checkDoc(2, doc)
+    return Doc.width(
         doc,
         function (w)
             if w > n then
@@ -956,214 +577,103 @@ end
 
 -- Forecolor combinators
 for k, v in pairs(ansi.Color) do
-    pp[k:lower()] = function (d)
-        checkDoc(1, d)
-        local doc = {
-            tag       = tag.Color,
-            layer     = ansi.ConsoleLayer.Foreground,
-            intensity = ansi.ColorIntensity.Vivid,
-            color     = v,
-            doc       = d
-        }
-        return setmetatable(doc, mt)
+    -- This assumes every constructor of ansi.Color is nullary.
+    pp[k:lower()] = function (doc)
+        Doc.checkDoc(1, doc)
+        return Doc.Color(ansi.ConsoleLayer.Foreground, ansi.ColorIntensity.Vivid, v, doc)
     end
-    pp['dull' .. k:lower()] = function (d)
-        checkDoc(1, d)
-        local doc = {
-            tag       = tag.Color,
-            layer     = ansi.ConsoleLayer.Foreground,
-            intensity = ansi.ColorIntensity.Dull,
-            color     = v,
-            doc       = d
-        }
-        return setmetatable(doc, mt)
+    pp['dull' .. k:lower()] = function (doc)
+        Doc.checkDoc(1, doc)
+        return Doc.Color(ansi.ConsoleLayer.Foreground, ansi.ColorIntensity.Dull, v, doc)
     end
-    pp['on' .. k:lower()] = function (d)
-        checkDoc(1, d)
-        local doc = {
-            tag       = tag.Color,
-            layer     = ansi.ConsoleLayer.Background,
-            intensity = ansi.ColorIntensity.Vivid,
-            color     = v,
-            doc       = d
-        }
-        return setmetatable(doc, mt)
+    pp['on' .. k:lower()] = function (doc)
+        Doc.checkDoc(1, doc)
+        return Doc.Color(ansi.ConsoleLayer.Background, ansi.ColorIntensity.Vivid, v, doc)
     end
-    pp['ondull' .. k:lower()] = function (d)
-        checkDoc(1, d)
-        local doc = {
-            tag       = tag.Color,
-            layer     = ansi.ConsoleLayer.Background,
-            intensity = ansi.ColorIntensity.Dull,
-            color     = v,
-            doc       = d
-        }
-        return setmetatable(doc, mt)
+    pp['ondull' .. k:lower()] = function (doc)
+        Doc.checkDoc(1, doc)
+        return Doc.Color(ansi.ConsoleLayer.Background, ansi.ColorIntensity.Dull, v, doc)
     end
 end
 
 -- Displays a document in a heavier font weight.
-function pp.bold(d)
-    checkDoc(1, d)
-    local doc = {
-        tag       = tag.Intensify,
-        intensity = ansi.ConsoleIntensity.Bold,
-        doc       = d
-    }
-    return setmetatable(doc, mt)
+function pp.bold(doc)
+    Doc.checkDoc(1, doc)
+    return Doc.Intensify(ansi.ConsoleIntensity.Bold, doc)
 end
 
 -- Displays a document in the normal font weight.
-function pp.debold(d)
-    checkDoc(1, d)
-    local doc = {
-        tag       = tag.Intensify,
-        intensity = ansi.ConsoleIntensity.Normal,
-        doc       = d
-    }
-    return setmetatable(doc, mt)
+function pp.debold(doc)
+    Doc.checkDoc(1, doc)
+    return Doc.Intensify(ansi.ConsoleIntensity.Normal, doc)
 end
 
 -- Underlining combinators
 
 -- Displays a document with underlining.
-function pp.underline(d)
-    checkDoc(1, d)
-    local doc = {
-        tag       = tag.Underline,
-        underline = ansi.Underlining.SingleUnderline,
-        doc       = d
-    }
-    return setmetatable(doc, mt)
+function pp.underline(doc)
+    Doc.checkDoc(1, doc)
+    return Doc.Underline(ansi.Underlining.SingleUnderline, doc)
 end
 
 -- Displays a document with no underlining.
-function pp.nounderline(d)
-    checkDoc(1, d)
-    local doc = {
-        tag       = tag.Underline,
-        underline = ansi.Underlining.NoUnderline,
-        doc       = d
-    }
-    return setmetatable(doc, mt)
+function pp.nounderline(doc)
+    Doc.checkDoc(1, doc)
+    return Doc.Underline(ansi.Underlining.NoUnderline, doc)
 end
 
 -- Formatting elimination combinators
 
 -- Removes all colorisation, emboldening and underlining from a
 -- document.
-local _plain = {
-    [tag.FlatAlt] = function (src)
-        local doc = {
-            tag = tag.FlatAlt,
-            fst = pp.plain(src.fst),
-            snd = pp.plain(src.snd)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Cat] = function (src)
-        local doc = {
-            tag = tag.Cat,
-            fst = pp.plain(src.fst),
-            snd = pp.plain(src.snd)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Nest] = function (src)
-        local doc = {
-            tag = tag.Nest,
-            lv  = src.lv,
-            doc = pp.plain(src.doc)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Union] = function (src)
-        local doc = {
-            tag = tag.Union,
-            fst = lazy.delay(function () return pp.plain(src.fst()) end),
-            snd = lazy.delay(function () return pp.plain(src.snd()) end)
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Column] = function (src)
-        local doc = {
-            tag = tag.Column,
-            f   = function (k)
-                return pp.plain(src.f(k))
-            end
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Nesting] = function (src)
-        local doc = {
-            tag = tag.Nesting,
-            f   = function (i)
-                return pp.plain(src.f(i))
-            end
-        }
-        return setmetatable(doc, mt)
-    end,
-    [tag.Color] = function (src)
-        return pp.plain(src.doc)
-    end,
-    [tag.Intensify] = function (src)
-        return pp.plain(src.doc)
-    end,
-    [tag.Italicize] = function (src)
-        return pp.plain(src.doc)
-    end,
-    [tag.Underline] = function (src)
-        return pp.plain(src.doc)
-    end,
-    [tag.RestoreFormat] = function ()
-        return pp.empty
-    end
-}
 function pp.plain(doc)
-    checkDoc(1, doc)
-    local f = _plain[doc.tag]
-    if f then
-        return f(doc)
-    else
-        return doc
-    end
+    Doc.checkDoc(1, doc)
+    return Doc.plain(doc)
 end
 
 -- Rendering and displaying documents
 
--- renderPretty(ribbonfrac, width, color, x) renders document x with a
--- page width of width and a ribbon width of (ribbonfrac * width)
+-- renderPretty(ribbonfrac, width, x) renders document x with a page
+-- width of width and a ribbon width of (ribbonfrac * width)
 -- characters. The ribbon width is the maximal amount of
 -- non-indentation characters on a line. The parameter ribbonfrac
 -- should be between 0.0 and 1.0. If it is lower or higher, the ribbon
--- width will be 0 or width respectively. ANSI color information will
--- be output if the parameter color is true, or discarded otherwise.
-function pp.renderPretty(ribbonfrac, wid, color, doc)
-    checkArg(1, ribbonfrac, "number")
-    checkArg(2, wid, "number")
-    checkArg(3, color, "boolean")
-    checkDoc(4, doc)
-    return displayS(color, renderFits(fits1, ribbonfrac, wid, doc))
+-- width will be 0 or width respectively.
+function pp.renderPretty(rfrac, w, doc)
+    checkArg(1, rfrac, "number")
+    checkArg(2, w, "number")
+    Doc.checkDoc(3, doc)
+    return renderFits(SDoc.fits1, rfrac, w, doc)
 end
 
 -- renderCompact(x) renders document x without adding any
 -- indentation. Since no 'pretty' printing is involved, this renderer
 -- is very fast. The resulting output contains fewer characters than a
 -- pretty printed version and can be used for output that is read by
--- other programs. ANSI color information will be discarded.
+-- other programs. This rendering function does not add any
+-- colorisation information.
 function pp.renderCompact(doc)
-    checkDoc(1, doc)
-    return displayS(false, renderCompact(doc))
+    Doc.checkDoc(1, doc)
+    return scan(0, list.of(doc))
 end
 
 -- A slightly smarter rendering algorithm with more lookahead. It
 -- provides earlier breaking on deeply nested structures.
-function pp.renderSmart(ribbonfrac, wid, color, doc)
-    checkArg(1, ribbonfrac, "number")
-    checkArg(2, wid, "number")
-    checkArg(3, color, "boolean")
-    checkDoc(4, doc)
-    return displayS(color, renderFits(fitsR, ribbonfrac, wid, doc))
+function pp.renderSmart(rfrac, w, doc)
+    checkArg(1, rfrac, "number")
+    checkArg(2, w, "number")
+    Doc.checkDoc(3, doc)
+    return renderFits(SDoc.fitsR, rfrac, w, doc)
+end
+
+-- displayS(color, simpleDoc) takes the output simpleDoc from a
+-- rendering function and transforms it to a string. ANSI color
+-- information will be output if the parameter "color" is true, or
+-- discarded otherwise.
+function pp.displayS(color, doc)
+    checkArg(1, color, "boolean")
+    SDoc.checkSDoc(2, doc)
+    return SDoc.displayS(color, doc)
 end
 
 return pp

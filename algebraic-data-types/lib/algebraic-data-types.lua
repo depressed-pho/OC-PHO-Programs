@@ -5,11 +5,24 @@ function adt.define(...)
     -- and values are actual constructors.
     local tab  = {}
     local args = table.pack(...)
-    for tag = 1, args.n do
-        local ctorSpec = args[tag]
-        if getmetatable(ctorSpec) ~= adt.constructor then
-            error("bad argument #"..tag.." (constructor expected, got "..type(ctorSpec)..")", 2)
+
+    local ctors = {}
+    local meta  = {}
+    for i = 1, args.n do
+        if getmetatable(args[i]) == adt.constructor then
+            table.insert(ctors, args[i])
+
+        elseif getmetatable(args[i]) == adt.metamethod then
+            table.insert(meta, args[i])
+
+        else
+            error("bad argument #"..i.." (constructor or metamethod expected, got "..
+                      type(args[i])..")", 2)
         end
+    end
+
+    for tag = 1, #ctors do
+        local ctorSpec = args[tag]
 
         -- We want constructors to be callable, but if it is nullary
         -- we also want it to be usable without calling it.
@@ -17,6 +30,10 @@ function adt.define(...)
 
         if #ctorSpec.fields == 0 then
             ctor.fields = {n = 0}
+        end
+
+        for _, m in ipairs(meta) do
+            ctor[m.name] = m.func
         end
 
         setmetatable(
@@ -54,6 +71,8 @@ function adt.define(...)
             local case = cases[ctorSpec.name]
             if case then
                 return case(table.unpack(self.fields))
+            elseif cases._ then
+                return cases._(self)
             else
                 error("No case for the constructor "..ctorSpec.name.." exists", 2)
             end
@@ -168,6 +187,26 @@ setmetatable(
 
             local self = setmetatable({}, cls)
             self.name = name
+
+            return self
+        end
+    })
+
+-- Metamethods
+adt.metamethod = {}
+adt.metamethod.__index = adt.metamethod
+
+setmetatable(
+    adt.metamethod,
+    {
+        __call = function (cls, name, func)
+            checkArg(1, name, "string")
+            checkArg(2, func, "function")
+            assert(name:find("^__"))
+
+            local self = setmetatable({}, cls)
+            self.name = name
+            self.func = func
 
             return self
         end
