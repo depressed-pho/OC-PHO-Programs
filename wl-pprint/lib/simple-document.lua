@@ -86,28 +86,64 @@ function SDoc.fitsR(p, m, w, d)
 end
 
 function SDoc.displayS(color, d)
-    return d:match {
+    local chunks = {}
+    while d do
+        d:match {
+            SFail = function ()
+                error("Internal error: SFail can not appear uncaught in a rendered SDoc")
+            end,
+            SEmpty = function ()
+                d = nil
+            end,
+            SChar = function (char, sDoc)
+                chunks[#chunks+1] = char
+                d = sDoc
+            end,
+            SText = function (_, text, sDoc)
+                chunks[#chunks+1] = text
+                d = sDoc
+            end,
+            SLine = function (lv, sDoc)
+                chunks[#chunks+1] = '\n'
+                chunks[#chunks+1] = string.rep(' ', lv)
+                d = sDoc
+            end,
+            SSGR = function (sgrs, sDoc)
+                if color then
+                    chunks[#chunks+1] = ansi.setSGRCode(sgrs)
+                end
+                d = sDoc
+            end
+        }
+    end
+    return table.concat(chunks)
+end
+
+function SDoc.displayIO(handle, color, d)
+    d:match {
         SFail = function ()
             error("Internal error: SFail can not appear uncaught in a rendered SDoc")
         end,
         SEmpty = function ()
-            return ""
+            return
         end,
         SChar = function (char, sDoc)
-            return char .. SDoc.displayS(color, sDoc)
+            handle:write(char)
+            return SDoc.displayIO(handle, color, sDoc)
         end,
         SText = function (_, text, sDoc)
-            return text .. SDoc.displayS(color, sDoc)
+            handle:write(text)
+            return SDoc.displayIO(handle, color, sDoc)
         end,
         SLine = function (lv, sDoc)
-            return "\n" .. string.rep(" ", lv) .. SDoc.displayS(color, sDoc)
+            handle:write('\n', string.rep(' ', lv))
+            return SDoc.displayIO(handle, color, sDoc)
         end,
         SSGR = function (sgrs, sDoc)
             if color then
-                return ansi.setSGRCode(sgrs) .. SDoc.displayS(color, sDoc)
-            else
-                return SDoc.displayS(color, sDoc)
+                ansi.hSetSGR(handle, sgrs)
             end
+            return SDoc.displayIO(handle, color, sDoc)
         end
     }
 end

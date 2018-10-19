@@ -670,10 +670,36 @@ end
 -- rendering function and transforms it to a string. ANSI color
 -- information will be output if the parameter "color" is true, or
 -- discarded otherwise.
-function pp.displayS(color, doc)
+function pp.displayS(color, sDoc)
     checkArg(1, color, "boolean")
-    SDoc.checkSDoc(2, doc)
-    return SDoc.displayS(color, doc)
+    SDoc.checkSDoc(2, sDoc)
+    return SDoc.displayS(color, sDoc)
+end
+
+-- displayIO(handle, [color, ]simpleDoc) writes simpleDoc to the file
+-- handle "handle". If the optional parameter "color" is given, ANSI
+-- color information will be output if the parameter "color" is true,
+-- or discarded otherwise. If it is omitted, the function tries to
+-- determine if the file handle is actually a TTY, and if it looks
+-- like a TTY it will output ANSI color information.
+function pp.displayIO(handle, ...)
+    local args = table.pack(...)
+    local color, sDoc
+    if type(args[1]) == "boolean" then
+        color = args[1]
+        sDoc  = args[2]
+        SDoc.checkSDoc(3, sDoc)
+    else
+        if type(handle) == "table" and handle.tty then
+            -- Looks like an OpenOS tty.
+            color = true
+        else
+            color = false
+        end
+        sDoc = args[1]
+        SDoc.checkSDoc(2, sDoc)
+    end
+    SDoc.displayIO(handle, color, sDoc)
 end
 
 return pp
