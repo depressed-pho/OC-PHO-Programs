@@ -20,7 +20,7 @@ terminal control, which includes:
 
 This module is OS-independent and should work on any OpenComputers
 OSes. But due to the current limitation of OC, most of SGR commands
-don't work at all. In particular, none of OC GPUs support bold or
+don't work at all. In particular, none of OC GPUs can display bold or
 underlined characters.
 
 ## License
