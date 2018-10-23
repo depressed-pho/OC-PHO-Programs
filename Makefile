@@ -25,6 +25,7 @@ fixme:
 dist:
 	rm -rf _dist
 	mkdir -p _dist/bin
+	mkdir -p _dist/lib/ansi-terminal
 	mkdir -p _dist/lib/containers
 	mkdir -p _dist/lib/tap/parser
 	mkdir -p _dist/lib/program-options
@@ -35,7 +36,10 @@ dist:
 	cp algebraic-data-types/lib/*.lua	_dist/lib
 	cp algebraic-data-types/man/*		_dist/man
 	cp algebraic-data-types/test/*.lua	_dist/test
-	cp ansi-terminal/lib/*.lua	_dist/lib
+	cp ansi-terminal/lib/ansi-terminal.lua	_dist/lib
+	cp ansi-terminal/lib/*.lua		_dist/lib/ansi-terminal
+	cp ansi-terminal/man/*			_dist/man
+	cp ansi-terminal/test/*.lua		_dist/test
 	cp containers/lib/*.lua		_dist/lib/containers
 	cp containers/man/*		_dist/man/containers
 	cp containers/test/*.lua	_dist/test/containers

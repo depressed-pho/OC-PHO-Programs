@@ -141,7 +141,7 @@ function SDoc.displayIO(handle, color, d)
         end,
         SSGR = function (sgrs, sDoc)
             if color then
-                ansi.hSetSGR(handle, sgrs)
+                ansi.setSGR(handle, sgrs)
             end
             return SDoc.displayIO(handle, color, sDoc)
         end

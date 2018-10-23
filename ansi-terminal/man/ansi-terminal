@@ -1,0 +1,198 @@
+NAME
+    ansi-terminal -- Generate ANSI terminal escape sequences
+
+SYNOPSIS
+    local ansi = require("ansi-terminal")
+
+    -- Clear the entire screen.
+    ansi.clearScreen()
+
+    -- Set the foreground color to green, and print something.
+    ansi.setSGR(
+        { ansi.SGR.SetColor(
+              ansi.ConsoleLayer.Foreground,
+              ansi.ColorIntensity.Dull,
+              ansi.Color.Green) })
+    print("Hello, world!")
+
+    -- Reset the color to the default.
+    ansi.setSGR({ ansi.SGR.Reset })
+
+DESCRIPTION
+    This module provides a collection of functions to generate ANSI
+    terminal escape sequences.
+
+    Most functions in this module come in two flavours:
+
+    * Vanilla: Takes an optional file handle as the first argument. If
+      it is given the ANSI escape sequence will be sent to the
+      handle. Otherwise it will be sent to io.output().
+
+    * Chocolate: Returns a string consisting of an escape sequence
+      without actually doing any I/O. The string can be added to any
+      other bit of text before being output.
+
+CURSOR MOVEMENT BY CHARACTER
+    ansi.cursorUp([h: handle,] n: number)
+    ansi.cursorDown([h: handle,] n: number)
+    ansi.cursorForward([h: handle,] n: number)
+    ansi.cursorBackward([h: handle,] n: number)
+
+    ansi.cursorUpCode(n: number): string
+    ansi.cursorDownCode(n: number): string
+    ansi.cursorForwardCode(n: number): string
+    ansi.cursorBackwardCode(n: number): string
+
+CURSOR MOVEMENT BY LINE
+    ansi.cursorDownLine([h: handle,] n: number)
+    ansi.cursorUpLine([h: handle,] n: number)
+
+    ansi.cursorDownLineCode(n: number): string
+    ansi.cursorUpLineCode(n: number): string
+
+DIRECTLY CHANGING CURSOR POSITION
+    ansi.cursorColumn([h: handle,] col: number)
+    ansi.cursorPosition([h: handle,] row: number, col: number)
+
+    ansi.cursorColumnCode(col: number): string
+    ansi.cursorPositionCode(row: number, col: number): string
+
+SAVING, RESTORING, AND REPORTING CURSOR POSITION
+    ansi.saveCursor([h: handle])
+    ansi.saveCursorCode(): string
+        Save the cursor position in memory. The only way to access the
+        saved value is with the restoreCursor command.
+
+    ansi.restoreCursor([h: handle])
+    ansi.restoreCursorCode(): string
+        Restore the cursor position from memory. There will be no
+        value saved in memory until the first use of the saveCursor
+        command.
+
+    ansi.reportCursorPosition([h: handle])
+    ansi.reportCursorPositionCode(): string
+        Emit the cursor position into the console input stream,
+        immediately after being recognised on the output stream, as:
+        ESC [ <cursor row> ; <cursor column> R
+
+CLEARING PARTS OF THE SCREEN
+    ansi.clearFromCursorToScreenEnd([h: handle])
+    ansi.clearFromCursorToScreenBeginning([h: handle])
+    ansi.clearScreen([h: handle])
+    ansi.clearFromCursorToLineEnd([h: handle])
+    ansi.clearFromCursorToLineBeginning([h: handle])
+    ansi.clearLine([h: handle])
+
+    ansi.clearFromCursorToScreenEndCode(): string
+    ansi.clearFromCursorToScreenBeginningCode(): string
+    ansi.clearScreenCode(): string
+    ansi.clearFromCursorToLineEndCode(): string
+    ansi.clearFromCursorToLineBeginningCode(): string
+    ansi.clearLineCode(): string
+
+SCROLLING THE SCREEN
+    ansi.scrollPageUp([h: handle,] n: number)
+    ansi.scrollPageUpCode(n: number): string
+        Scroll the displayed information 'n' lines up the terminal:
+        not widely supported.
+
+    ansi.scrollPageDown([h: handle,] n: number)
+    ansi.scrollPageDownCode(n: number): string
+        Scroll the displayed information 'n' lines down the terminal:
+        not widely supported.
+
+SELECT GRAPHIC RENDITION MODE: COLORS AND OTHER WHIZZY STUFF
+    ansi.setSGR([h: handle,] sgrs: {SGR})
+    ansi.setSGRCode(sgrs: {SGR}): string
+        Set the Select Graphic Rendition mode. The parameter 'sgrs' is
+        a sequence of commands: these will typically be applied on top
+        of the current console SGR mode. An empty sequence of commands
+        is equivalent to the sequence {Reset}. Commands are applied
+        left to right.
+
+    ansi.SGR.Reset: SGR
+    ansi.SGR.SetConsoleIntensity(i: Intensity): SGR
+    ansi.SGR.SetItalicized(b: boolean): SGR
+    ansi.SGR.SetUnderlining(u: Underlining): SGR
+    ansi.SGR.SetBlinkSpeed(b: BlinkSpeed): SGR
+    ansi.SGR.SetVisible(b: boolean): SGR
+    ansi.SGR.SetSwapForegroundBackground(b: boolean): SGR
+    ansi.SGR.SetColor(l: ConsoleLayer, i: ColorIntensity, c: Color): SGR
+    ansi.SGR.SetRGBColor(l: ConsoleLayer, r: number, g: number, b: number): SGR
+        ANSI Select Graphic Rendition command. The RGB components in
+        the SetRGBColor command should be in the range of [0.0, 1.0].
+
+    ansi.ConsoleLayer.Foreground: ConsoleLayer
+    ansi.ConsoleLayer.Background: ConsoleLayer
+        ANSI colors can be set on two different layers.
+
+    ansi.Color.Black: Color
+    ansi.Color.Red: Color
+    ansi.Color.Green: Color
+    ansi.Color.Yellow: Color
+    ansi.Color.Blue: Color
+    ansi.Color.Magenta: Color
+    ansi.Color.Cyan: Color
+    ansi.Color.White: Color
+        ANSI colors: come in various intensities, which are controlled
+        by ColorIntensity.
+
+    ansi.ColorIntensity.Dull: ColorIntensity
+    ansi.ColorIntensity.Vivid: ColorIntensity
+        ANSI colors come in two intensities.
+
+    ansi.ConsoleIntensity.Bold: ConsoleIntensity
+    ansi.ConsoleIntensity.Faint: ConsoleIntensity
+    ansi.ConsoleIntensity.Normal: ConsoleIntensity
+        ANSI general console intensity: usually treated as setting the
+        font style (e.g. BoldIntensity causes text to be bold)
+
+    ansi.Underlining.SingleUnderline: Underlining
+    ansi.Underlining.DoubleUnderline: Underlining
+    ansi.Underlining.NoUnderline: Underlining
+        ANSI text underlining. DoubleUnderline is not widely
+        supported.
+
+    ansi.BlinkSpeed.SlowBlink: BlinkSpeed
+    ansi.BlinkSpeed.RapidBlink: BlinkSpeed
+    ansi.BlinkSpeed.NoBlink: BlinkSpeed
+        ANSI blink speeds: values other than NoBlink are not widely
+        supported.
+
+CURSOR VISIBILITY CHANGES
+    ansi.hideCursor([h: handle])
+    ansi.showCursor([h: handle])
+
+    ansi.hideCursorCode(): string
+    ansi.showCursorCode(): string
+
+CHANGING THE TITLE
+    ansi.setTitle([h: handle,] title: string)
+    ansi.setTitleCode(title: string): string
+        Set the terminal window title. This usually only makes sense
+        for terminal emulators running on a window system.
+
+CHECKING IF A HANDLE SUPPORTS ANSI
+    ansi.supportsANSI([h: handle])
+        Use heuristics to determine whether the functions defined in
+        this package will work with a given handle, or io.output() if
+        not given.
+
+GETTING THE CURSOR POSITION
+    ansi.getCursorPosition(): row: number, col: number
+        Attempt to get the reported cursor position, combining the
+        functions reportCursorPosition, getReportedCursorPosition and
+        parseCursorPosition. Returns nil if any data emitted by
+        reportCursorPosition, obtained by getReportedCursorPosition,
+        cannot be parsed by parseCursorPosition.
+
+    ansi.getReportedCursorPosition(): string
+        Attempt to get the reported cursor position data from the
+        console input stream. The function is intended to be called
+        immediately after reportCursorPosition (or related functions)
+        have caused characters to be emitted into the stream.
+
+    ansi.parseCursorPosition(report: string): row: number, col: number
+        Parse the characters emitted by reportCursorPosition into the
+        console input stream. Returns the cursor row and column, or
+        nil if they cannot be parsed.
