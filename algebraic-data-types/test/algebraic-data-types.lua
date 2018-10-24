@@ -7,7 +7,18 @@ local adt = t:requireOK('algebraic-data-types') or t:bailOut("Can't load algebra
 t:subtest(
     "Maybe a = Nothing | Just a",
     function ()
-        t:plan(10)
+        t:plan(11)
+
+        local function bind(self, f)
+            return self:match {
+                Nothing = function ()
+                    return self
+                end,
+                Just = function (x)
+                    return f(x)
+                end
+            }
+        end
 
         local function __tostring(m)
             return m:match {
@@ -23,6 +34,7 @@ t:subtest(
         local Maybe = adt.define(
             adt.constructor('Nothing'),
             adt.constructor('Just', adt.field()),
+            adt.method('bind', bind),
             adt.metamethod('__tostring', __tostring))
 
         t:ok(Maybe.Just(42):is(Maybe), 'Just(42):is(Maybe)')
@@ -35,7 +47,12 @@ t:subtest(
         t:is(Maybe.Just(42):fields(), 42, 'Just(42):fields()')
         t:isDeeply(#Maybe.Nothing.fields, 0, 'Nothing.fields')
 
-        t:is(tostring(Maybe.Just(42)), "Just(42)", 'metamethod')
+        t:is(Maybe.Just(42):bind(
+                 function (x)
+                     assert(type(x) == "number")
+                     return Maybe.Just(x+1)
+                 end).fields[1], 43, 'method (bind)')
+        t:is(tostring(Maybe.Just(42)), "Just(42)", 'metamethod (__tostring)')
 
         local ret = Maybe.Just(42):match {
             Nothing = function ()

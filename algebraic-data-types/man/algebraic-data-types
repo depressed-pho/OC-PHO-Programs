@@ -41,9 +41,10 @@ DEFINING DATA TYPES
         table will have entries for each name of constructor and its
         corresponding constructor function.
 
-        One can also pass metamethods created with adt.metamethod() as
-        arguments. Those metamethods will be injected into values of
-        the type to be defined.
+        One can also pass methods created with adt.method() and
+        metamethods created with adt.metamethod() as arguments. Those
+        methods and metamethods will be injected into values of the
+        type to be defined.
 
         The generated table will not have a metatable. One can freely
         add any properties to it or set a metatable without worrying
@@ -55,6 +56,34 @@ DEFINING DATA TYPES
 
     adt.field([name: string]): field
         Create a field with an optional name.
+
+    adt.method(name: string, func: function): method
+        Create a method with a name and a function. The name should
+        not conflict with any of named fields, or ones provided by
+        default such as "match". Conflicting methods will be
+        discarded.
+
+            local function bind(self, f) -- f: (a)->Maybe(b)
+                return self:match {
+                    Nothing = function ()
+                        return self
+                    end,
+                    Just = function (x)
+                        return f(x)
+                    end
+                }
+            end
+
+            local Maybe = adt.define(
+                adt.constructor("Nothing"),
+                adt.constructor("Just", adt.field()),
+                adt.method("bind", bind)
+
+            local x = Maybe.Just(42):bind(
+                          function (x)
+                              return Maybe.Just(x+1)
+                          end)
+            -- x is identical to Maybe.Just(43).
 
     adt.metamethod(name: string, func: function): metamethod
         Create a metamethod with a name and a function. Note that the

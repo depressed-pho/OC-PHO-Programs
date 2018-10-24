@@ -6,15 +6,16 @@ function adt.define(...)
     local tab  = {}
     local args = table.pack(...)
 
-    local ctors = {}
-    local meta  = {}
+    local ctors   = {}
+    local methods = {}
+    local meta    = {}
     for i = 1, args.n do
         if getmetatable(args[i]) == adt.constructor then
             table.insert(ctors, args[i])
-
+        elseif getmetatable(args[i]) == adt.method then
+            methods[args[i].name] = args[i].func
         elseif getmetatable(args[i]) == adt.metamethod then
-            table.insert(meta, args[i])
-
+            meta[args[i].name] = args[i].func
         else
             error("bad argument #"..i.." (constructor or metamethod expected, got "..
                       type(args[i])..")", 2)
@@ -32,8 +33,11 @@ function adt.define(...)
             ctor.fields = {n = 0}
         end
 
-        for _, m in ipairs(meta) do
-            ctor[m.name] = m.func
+        for name, func in pairs(methods) do
+            ctor[name] = func
+        end
+        for name, func in pairs(meta) do
+            ctor[name] = func
         end
 
         setmetatable(
@@ -85,7 +89,6 @@ function adt.define(...)
             -- to do the redirection ourselves.
             if name == "is" then
                 return ctor.is
-
             elseif name == "match" then
                 return ctor.match
             else
@@ -93,8 +96,15 @@ function adt.define(...)
                 if idx then
                     return self.fields[idx]
                 else
-                    error("Constructor "..ctorSpec.name..
-                              " does not have a field named "..tostring(name), 2)
+                    -- User-supplied methods have the lowest
+                    -- precedence.
+                    local method = methods[name]
+                    if method then
+                        return method
+                    else
+                        error("Constructor "..ctorSpec.name..
+                                  " does not have a field named "..tostring(name), 2)
+                    end
                 end
             end
         end
@@ -187,6 +197,25 @@ setmetatable(
 
             local self = setmetatable({}, cls)
             self.name = name
+
+            return self
+        end
+    })
+
+-- Methods
+adt.method = {}
+adt.method.__index = adt.method
+
+setmetatable(
+    adt.method,
+    {
+        __call = function (cls, name, func)
+            checkArg(1, name, "string")
+            checkArg(2, func, "function")
+
+            local self = setmetatable({}, cls)
+            self.name = name
+            self.func = func
 
             return self
         end
