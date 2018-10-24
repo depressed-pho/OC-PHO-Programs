@@ -61,6 +61,7 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
 
         local dsRestore = lazy.delay(
             function ()
+                -- dsRestore is not always used, hence the laziness.
                 local restore = Doc.RestoreFormat(mb_fc, mb_bc, mb_in, mb_it, mb_un)
                 return list.cons({i, restore}, ds)
             end)
@@ -91,12 +92,12 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
             Nest = function (lv, doc)
                 return bestTypical(n, k, list.cons({i+lv, doc}, ds))
             end,
-            Union = function (fst, snd)
+            Union = function (fst, sndL)
                 return nicest(r, w, fits, n, k,
                               bestTypical(n, k, list.cons({i, fst()}, ds)),
-                              lazy.delay(
-                                  function ()
-                                      return bestTypical(n, k, list.cons({i, snd()}, ds))
+                              sndL:map(
+                                  function (snd)
+                                      return bestTypical(n, k, list.cons({i, snd}, ds))
                                   end))
             end,
             Column = function (f)
@@ -138,31 +139,36 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
                          list.cons({i, doc}, dsRestore())))
             end,
             RestoreFormat = function (mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1)
-                local sgrs = {ansi.SGR.Reset}
-                maybe.fmap(
-                    function (inCol) -- {intensity, color}
-                        table.insert(sgrs, ansi.SGR.SetColor(
-                                         ansi.SGR.ConsoleLayer.Foreground,
-                                         table.unpack(inCol)))
-                    end, mb_fc1)
-                maybe.fmap(
-                    function (inCol)
-                        table.insert(sgrs, ansi.SGR.SetColor(
-                                         ansi.SGR.ConsoleLayer.Background,
-                                         table.unpack(inCol)))
-                    end, mb_bc1)
-                maybe.fmap(
-                    function (intensity)
-                        table.insert(sgrs, ansi.SGR.SetConsoleIntensity(intensity))
-                    end, mb_in1)
-                maybe.fmap(
-                    function (italicized)
-                        table.insert(sgrs, ansi.SGR.SetItalicized(italicized))
-                    end, mb_it1)
-                maybe.fmap(
-                    function (underlining)
-                        table.insert(sgrs, ansi.SGR.SetUnderlining(underlining))
-                    end, mb_un1)
+                local sgrs = {
+                    ansi.SGR.Reset,
+                    table.unpack(
+                        maybe.catMaybes {
+                            mb_fc1:map(
+                                function (inCol) -- {intensity, color}
+                                    return ansi.SGR.SetColor(
+                                        ansi.SGR.ConsoleLayer.Foreground,
+                                        table.unpack(inCol))
+                                end),
+                            mb_bc1:map(
+                                function (inCol)
+                                    return ansi.SGR.SetColor(
+                                        ansi.SGR.ConsoleLayer.Background,
+                                        table.unpack(inCol))
+                                end),
+                            mb_in1:map(
+                                function (intensity)
+                                    return ansi.SGR.SetConsoleIntensity(intensity)
+                                end),
+                            mb_it1:map(
+                                function (italicized)
+                                    return ansi.SGR.SetItalicized(italicized)
+                                end),
+                            mb_un1:map(
+                                function (underlining)
+                                    return ansi.SGR.SetUnderlining(underlining)
+                                end)
+                        })
+                }
                 return SDoc.SSGR(
                     sgrs,
                     best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1, ds))

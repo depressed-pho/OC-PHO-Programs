@@ -12,6 +12,9 @@ terminal control, which includes:
 * Moving the cursor around
 * Clearing parts of the screen
 
+This package is modeled after
+[ansi-terminal](http://hackage.haskell.org/package/ansi-terminal).
+
 ## Modules
 
 * [ansi-terminal](man/ansi-terminal)

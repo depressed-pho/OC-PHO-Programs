@@ -1,0 +1,103 @@
+NAME
+    containers/maybe -- Values that may or may not exist
+
+SYNOPSIS
+    local maybe = require("containers/maybe")
+
+    local m1 = maybe.Just(42)
+
+    -- Monadic computation
+    local m2 = m1:bind(function (x)
+        return maybe.Just(x + 1)
+    end)
+    print(maybe.fromJust(m2)) -- prints 43
+
+    -- Mapping a function
+    local m3 = m1:bind(function (x)
+        return x + 1
+    end)
+    print(maybe.fromJust(m3)) -- prints 43
+
+DESCRIPTION
+    The Maybe type encapsulates an optional value. A value of type
+    Maybe either contains a value (represented as Just(x)), or it is
+    empty (represented as Nothing). Using Maybe is a good way to deal
+    with errors or exceptional cases without resorting to nil (which
+    is a second-class citizen in Lua), or drastic measures such as
+    error().
+
+CONSTRUCTORS
+    maybe.Nothing: Maybe
+    maybe.Just(x: any): Maybe
+
+METAMETHODS
+    Values of the Maybe type overrides the following operators:
+
+    ..
+        Concatenation is defined as follows:
+        * Nothing .. Nothing = Nothing
+        * Just(x) .. Nothing = Just(x)
+        * Nothing .. Just(y) = Just(y)
+        * Just(x) .. Just(y) = Just(x..y)
+
+    ==
+        Equality is defined as follows:
+        * Nothing == Nothing
+        * Just(x) ~= Nothing
+        * Nothing ~= Just(y)
+        * Just(x) == Just(y) iff x == y
+
+    <
+        Less-than is defined as follows:
+        * Nothing < Just(x)
+        * Just(x) < Just(y) iff x < y
+
+    <=
+        Less-than-or-equals-to is defined as follows:
+        * Nothing <= Nothing
+        * Nothing <= Just(x)
+        * Just(x) <= Just(y) iff x <= y
+
+    tostring
+        The __tostring metamethod is defined as follows:
+        * tostring(Nothing) = "Nothing"
+        * tostring(Just(x)) = "Just("..tostring(x)..")"
+
+METHODS
+    m:bind(f: (a: any)->Maybe): Maybe
+        Monadic composition. If m is Nothing it returns Nothing. If m
+        is Just(x) it applies the given function to x, and returns the
+        result.
+
+    m:map(f: (a: any)->any): any
+        Functor mapping. If m is Nothing it returns Nothing. If m is
+        Just(x) it applies the given function to x, and returns the
+        result wrapped in Just.
+
+FUNCTIONS
+
+    m.maybe(b: any, f: (a: any)->any, m: Maybe): any
+        Function mapping with a default value. If m is Nothing it
+        returns b. If m is Just(x) it applies the given function to x,
+        and returns the result.
+
+    m.isJust(m: Maybe): boolean
+        Return true if m is Just, or false otherwise.
+
+    m.isNothing(m: Maybe): boolean
+        Return true if m is Nothing, or false otherwise.
+
+    m.fromJust(m: Maybe): any
+        If m is Just(x) it returns x, or throws an error otherwise.
+
+    m.fromMaybe(a: any, m: Maybe): any
+        If m is Just(x) it returns x, or 'a' otherwise.
+
+    m.catMaybes(ms: table): table
+        This function takes a sequence of Maybe values, and returns a
+        sequence of Just values with the Just constructor unwrapped.
+
+    m.mapMaybe(f: (a: any)->Maybe, xs: table): table
+        Map a function over a sequence of values, and collects Just
+        values from the result. Elements that 'f' yields Nothing will
+        be discarded.

@@ -7,6 +7,7 @@ than tables.
 
 * [containers/array](man/array)
 * [containers/map](man/map)
+* [containers/maybe](man/maybe)
 * [containers/set](man/set)
 
 ## Dependencies

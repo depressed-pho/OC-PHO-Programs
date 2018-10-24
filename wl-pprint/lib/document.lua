@@ -121,7 +121,7 @@ function Doc.group(doc)
     Doc.checkDoc(1, doc)
     return Doc.Union(
         lazy.delay(function () return Doc.flatten(doc) end),
-        lazy.delay(function () return doc end))
+        lazy.wrap(doc))
 end
 
 -- The document softline behaves like 'space' if the resulting output
@@ -215,9 +215,7 @@ function Doc.plain(d)
             return Doc.Nest(lv, Doc.plain(doc))
         end,
         Union = function (fst, snd)
-            return Doc.Union(
-                lazy.delay(function () return Doc.plain(fst()) end),
-                lazy.delay(function () return Doc.plain(snd()) end))
+            return Doc.Union(fst:map(Doc.plain), snd:map(Doc.plain))
         end,
         Column = function (f)
             return Doc.Column(
