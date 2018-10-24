@@ -31,12 +31,32 @@ local mt = {
             val.thunk = nil
         end
         return val.value
-    end
+    end,
+    __index = lazy
 }
 function lazy.delay(thunk)
     checkArg(1, thunk, "function")
     local obj = {
         thunk = thunk,
+        value = nil
+    }
+    return setmetatable(obj, mt)
+end
+
+function lazy.wrap(val)
+    local obj = {
+        thunk = nil,
+        value = val
+    }
+    return setmetatable(obj, mt)
+end
+
+function lazy:map(f)
+    checkArg(1, f, "function")
+    local obj = {
+        thunk = function ()
+            return f(self())
+        end,
         value = nil
     }
     return setmetatable(obj, mt)

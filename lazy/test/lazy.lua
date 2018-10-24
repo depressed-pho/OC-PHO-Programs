@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(2)
+t:plan(3)
 
 local lazy = t:requireOK('lazy') or t:bailOut("Can't load program-options")
 
@@ -30,7 +30,7 @@ t:subtest(
 t:subtest(
     'delay and force',
     function ()
-        t:plan(4)
+        t:plan(5)
 
         local evaluated = false
         local delayed   = lazy.delay(
@@ -46,4 +46,27 @@ t:subtest(
         evaluated = false
         lazy.force(delayed)
         t:ok(not evaluated, "force()'ing the same value doesn't evaluate it again")
+
+        local wrapped = lazy.wrap(42)
+        t:is(wrapped(), 42, "wrap")
+    end)
+
+t:subtest(
+    'map',
+    function ()
+        t:plan(2)
+
+        local evaluated = false
+        local foo = lazy.delay(
+            function ()
+                evaluated = true
+                return 42
+            end)
+        local bar = foo:map(
+            function (x)
+                return x+1
+            end)
+
+        t:ok(not evaluated, "Delayed values won't be forced simply because they are mapped")
+        t:is(bar(), 43, ":map() transforms a delayed value with a function")
     end)

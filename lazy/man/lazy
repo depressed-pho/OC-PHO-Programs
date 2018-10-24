@@ -11,37 +11,54 @@ SYNOPSIS
     local bar = lazy.delay(function () return 42 end)
 
     -- Force the delayed computation.
-    print(lazy.force(bar))
-    -- ..prints 42
+    print(lazy.force(bar)) -- prints 42
 
     -- Delayed computation can also be called as a nullary function.
-    print(bar())
-    -- ..prints 42
+    print(bar()) -- prints 42
 
 DESCRIPTION
     This module provides functions to lazily load modules and evaluate
     values.
 
+FUNCTIONS
     lazy.require(mod: string): table
         Same as the builtin require() except it loads modules
         lazily. The returned table is initially empty, but as soon as
         its element is observed it will be swapped with the real
         module.
 
-    lazy.delay(thunk: function): delayed
+    lazy.delay(thunk: function): lazy
         Create a lazily evaluated value out of a thunk which computes
         the value. The resulting object doesn't behave like its
         value. It must be passed to lazy.force() in order to get the
         computed value, or alternatively it can also be called as a
         function and it returns the value.
 
-    lazy.force(val: delayed): any
+    lazy.wrap(val: any): lazy
+        Turn an already computed value into a lazy
+        computation. Forcing it will simply result in the precomputed
+        value.
+
+    lazy.force(l: lazy): any
         Force a delayed computation of a value and return it. If the
         value has already been computed, it will be simply returned
         without getting computed twice.
 
         Applying lazy.force() to a delayed computation is semantically
-        equivalent to calling it as if it were a nullary function.
+        equivalent to calling it as a nullary function.
+
+METHODS
+    l:map(f: function): lazy
+        Create a delayed computation whose value will be computed,
+        when forced, by applying a given unary function to the forced
+        value.
+
+            local foo = lazy.delay(function () return 42 end)
+            local bar = foo:map(
+                function (x)
+                    return x + 1
+                end)
+            print(bar()) -- prints 43
 
 SEE ALSO
     package
