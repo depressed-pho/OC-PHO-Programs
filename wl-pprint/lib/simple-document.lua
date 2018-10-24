@@ -71,9 +71,9 @@ function SDoc.fitsR(p, m, w, d)
             SText = function (len, _, sDoc)
                 return SDoc.fitsR(p, m, w-len, sDoc)
             end,
-            SLine = function (_, sDoc)
-                if m < 1 then
-                    return SDoc.fitsR(p, m, p-1, sDoc)
+            SLine = function (lv, sDoc)
+                if m < lv then
+                    return SDoc.fitsR(p, m, p-lv, sDoc)
                 else
                     return true
                 end

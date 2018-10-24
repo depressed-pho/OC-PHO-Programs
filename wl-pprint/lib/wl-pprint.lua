@@ -1,9 +1,10 @@
-local ansi = require('ansi-terminal')
-local lazy = require('lazy')
-local list = require('containers/list')
+local ansi  = require('ansi-terminal')
+local lazy  = require('lazy')
+local list  = require('containers/list')
+local maybe = require('containers/maybe')
 
-local Doc  = require('wl-pprint/document')
-local SDoc = require('wl-pprint/simple-document')
+local Doc   = require('wl-pprint/document')
+local SDoc  = require('wl-pprint/simple-document')
 
 local pp = {}
 
@@ -23,7 +24,13 @@ do
     if ok then
         wlen = result.wlen
     else
-        wlen = string.len
+        -- Do we have utf8.len() from Lua 5.3? It's still better than
+        -- string.len().
+        if type(utf8) == "table" and utf8.len then
+            wlen = utf8.len
+        else
+            wlen = string.len
+        end
     end
 end
 
@@ -102,9 +109,9 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
                 local mb_fc1, mb_bc1
                 if layer:is(ansi.ConsoleLayer.Background) then
                     mb_fc1 = mb_fc
-                    mb_bc1 = {intensity, color}
+                    mb_bc1 = maybe.Just({intensity, color})
                 else
-                    mb_fc1 = {intensity, color}
+                    mb_fc1 = maybe.Just({intensity, color})
                     mb_bc1 = mb_bc
                 end
                 return SDoc.SSGR(
@@ -115,42 +122,47 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
             Intensify = function (intensity, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetConsoleIntensity(intensity)},
-                    best(r, w, fits, n, k, mb_fc, mb_bc, intensity, mb_it, mb_un,
+                    best(r, w, fits, n, k, mb_fc, mb_bc, maybe.Just(intensity), mb_it, mb_un,
                          list.cons({i, doc}, dsRestore())))
             end,
             Italicize = function (italicized, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetItalicized(italicized)},
-                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, italicized, mb_un,
+                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, maybe.Just(italicized), mb_un,
                          list.cons({i, doc}, dsRestore())))
             end,
             Underline = function (underline, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetUnderlining(underline)},
-                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, underline,
+                    best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, maybe.Just(underline),
                          list.cons({i, doc}, dsRestore())))
             end,
             RestoreFormat = function (mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1)
                 local sgrs = {ansi.SGR.Reset}
-                if mb_fc1 then
-                    table.insert(sgrs, ansi.SGR.SetColor(
-                                     ansi.SGR.ConsoleLayer.Foreground,
-                                     table.unpack(mb_fc1)))
-                end
-                if mb_bc1 then
-                    table.insert(sgrs, ansi.SGR.SetColor(
-                                     ansi.SGR.ConsoleLayer.Background,
-                                     table.unpack(mb_bc1)))
-                end
-                if mb_in1 then
-                    table.insert(sgrs, ansi.SGR.SetConsoleIntensity(mb_in1))
-                end
-                if mb_it1 then
-                    table.insert(sgrs, ansi.SGR.SetItalicized(mb_it1))
-                end
-                if mb_un1 then
-                    table.insert(sgrs, ansi.SGR.SetUnderlining(mb_un1))
-                end
+                maybe.fmap(
+                    function (inCol) -- {intensity, color}
+                        table.insert(sgrs, ansi.SGR.SetColor(
+                                         ansi.SGR.ConsoleLayer.Foreground,
+                                         table.unpack(inCol)))
+                    end, mb_fc1)
+                maybe.fmap(
+                    function (inCol)
+                        table.insert(sgrs, ansi.SGR.SetColor(
+                                         ansi.SGR.ConsoleLayer.Background,
+                                         table.unpack(inCol)))
+                    end, mb_bc1)
+                maybe.fmap(
+                    function (intensity)
+                        table.insert(sgrs, ansi.SGR.SetConsoleIntensity(intensity))
+                    end, mb_in1)
+                maybe.fmap(
+                    function (italicized)
+                        table.insert(sgrs, ansi.SGR.SetItalicized(italicized))
+                    end, mb_it1)
+                maybe.fmap(
+                    function (underlining)
+                        table.insert(sgrs, ansi.SGR.SetUnderlining(underlining))
+                    end, mb_un1)
                 return SDoc.SSGR(
                     sgrs,
                     best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1, ds))
@@ -161,7 +173,13 @@ end
 local function renderFits(fits, rfrac, w, x)
     -- r :: the ribbon width in characters
     local r = math.max(0, math.min(w, math.floor(w * rfrac)))
-    return best(r, w, fits, 0, 0, nil, nil, nil, nil, nil, list.of({0, x}))
+    return best(r, w, fits, 0, 0,
+                maybe.Nothing,
+                maybe.Nothing,
+                maybe.Nothing,
+                maybe.Nothing,
+                maybe.Nothing,
+                list.of({0, x}))
 end
 
 local function scan(k, ds0)
@@ -575,22 +593,22 @@ end
 
 -- ANSI formatting combinators
 
--- Forecolor combinators
+-- Color combinators
 for k, v in pairs(ansi.Color) do
     -- This assumes every constructor of ansi.Color is nullary.
     pp[k:lower()] = function (doc)
         Doc.checkDoc(1, doc)
         return Doc.Color(ansi.ConsoleLayer.Foreground, ansi.ColorIntensity.Vivid, v, doc)
     end
-    pp['dull' .. k:lower()] = function (doc)
+    pp['dull'..k] = function (doc)
         Doc.checkDoc(1, doc)
         return Doc.Color(ansi.ConsoleLayer.Foreground, ansi.ColorIntensity.Dull, v, doc)
     end
-    pp['on' .. k:lower()] = function (doc)
+    pp['on'..k] = function (doc)
         Doc.checkDoc(1, doc)
         return Doc.Color(ansi.ConsoleLayer.Background, ansi.ColorIntensity.Vivid, v, doc)
     end
-    pp['ondull' .. k:lower()] = function (doc)
+    pp['onDull'..k] = function (doc)
         Doc.checkDoc(1, doc)
         return Doc.Color(ansi.ConsoleLayer.Background, ansi.ColorIntensity.Dull, v, doc)
     end
@@ -617,7 +635,7 @@ function pp.underline(doc)
 end
 
 -- Displays a document with no underlining.
-function pp.nounderline(doc)
+function pp.noUnderline(doc)
     Doc.checkDoc(1, doc)
     return Doc.Underline(ansi.Underlining.NoUnderline, doc)
 end
