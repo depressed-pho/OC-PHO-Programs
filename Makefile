@@ -53,7 +53,7 @@ dist:
 	cp tap/lib/parser/*.lua		_dist/lib/tap/parser
 	cp program-options/lib/program-options.lua	_dist/lib
 	cp program-options/lib/*.lua	_dist/lib/program-options
-	cp program-options/test/*.lua	_dist/test/program-options
+	cp program-options/test/*.lua	_dist/test
 	cp wl-pprint/lib/wl-pprint.lua	_dist/lib
 	cp wl-pprint/lib/*.lua		_dist/lib/wl-pprint
 	cp wl-pprint/test/*.lua		_dist/test

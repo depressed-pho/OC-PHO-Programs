@@ -196,7 +196,7 @@ t:subtest(
     function ()
         t:plan(3)
 
-        local vm     = po.variablesMap()
+        local vm     = po.variablesMap.new()
         local parser = po.commandLineParser.new():options(allDesc):positional(posDesc)
 
         vm:store(parser:run({"pat", "file1", "file2"}))

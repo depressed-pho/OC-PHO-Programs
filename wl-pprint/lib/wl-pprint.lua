@@ -52,12 +52,12 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
     local function bestTypical(n1, k1, ds1)
         return best(r, w, fits, n1, k1, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds1)
     end
-    if list.null(ds0) then
+    if ds0:null() then
         return SDoc.SEmpty
     else
         -- Indentation and document
         local i, d = table.unpack(ds0:head())
-        local ds   = list.tail(ds0)
+        local ds   = ds0:tail()
 
         local dsRestore = lazy.delay(
             function ()
@@ -188,7 +188,7 @@ local function renderFits(fits, rfrac, w, x)
 end
 
 local function scan(k, ds0)
-    if list.null(ds0) then
+    if ds0:null() then
         return SDoc.SEmpty
     else
         local d, ds = ds0:uncons()

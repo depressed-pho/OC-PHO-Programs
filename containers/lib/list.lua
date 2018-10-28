@@ -33,7 +33,8 @@ local function uncons(self)
 end
 
 local function head(self)
-    return select(1, self:uncons())
+    local hd = self:uncons()
+    return hd
 end
 
 local function tail(self)

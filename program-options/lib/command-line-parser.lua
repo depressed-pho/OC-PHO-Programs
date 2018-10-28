@@ -216,14 +216,19 @@ function commandLineParser:run(args)
     end
 
     -- For options that have default values but didn't show up in
-    -- args, apply those defaults here.
+    -- args, apply those defaults here. And for required options raise
+    -- errors.
     for opt in self._opts:options():values() do
         local name = opt:canonicalName()
         if not ret:has(name) then
             local sem = opt:semantic()
-            local def = sem:default()
-            if def ~= nil then
-                ret:set(name, variableValue.new(sem, def, true))
+            if sem:isRequired() then
+                error("Missing option "..self:_format(name), 2)
+            else
+                local def = sem:default()
+                if def ~= nil then
+                    ret:set(name, variableValue.new(sem, def, true))
+                end
             end
         end
     end

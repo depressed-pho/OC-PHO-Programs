@@ -42,6 +42,7 @@ function positionalOptionsDescription:add(name, maxCount)
             end
         end
         self._maxTotalCount = self._maxTotalCount + maxCount
+        return self
     end
 end
 
