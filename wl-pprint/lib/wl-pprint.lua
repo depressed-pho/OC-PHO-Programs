@@ -56,14 +56,14 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
         return SDoc.SEmpty
     else
         -- Indentation and document
-        local i, d = table.unpack(list.head(ds0))
+        local i, d = table.unpack(ds0:head())
         local ds   = list.tail(ds0)
 
         local dsRestore = lazy.delay(
             function ()
                 -- dsRestore is not always used, hence the laziness.
                 local restore = Doc.RestoreFormat(mb_fc, mb_bc, mb_in, mb_it, mb_un)
-                return list.cons({i, restore}, ds)
+                return ds:cons({i, restore})
             end)
 
         return d:match {
@@ -83,28 +83,27 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
                 return SDoc.SLine(i, bestTypical(i, i, ds))
             end,
             FlatAlt = function (fst, _)
-                return bestTypical(n, k, list.cons({i, fst}, ds))
+                return bestTypical(n, k, ds:cons({i, fst}))
             end,
             Cat = function (fst, snd)
-                return bestTypical(
-                    n, k, list.cons({i, fst}, list.cons({i, snd}, ds)))
+                return bestTypical(n, k, ds:cons({i, snd}):cons({i, fst}))
             end,
             Nest = function (lv, doc)
-                return bestTypical(n, k, list.cons({i+lv, doc}, ds))
+                return bestTypical(n, k, ds:cons({i+lv, doc}))
             end,
             Union = function (fst, sndL)
                 return nicest(r, w, fits, n, k,
-                              bestTypical(n, k, list.cons({i, fst()}, ds)),
+                              bestTypical(n, k, ds:cons({i, fst()})),
                               sndL:map(
                                   function (snd)
-                                      return bestTypical(n, k, list.cons({i, snd}, ds))
+                                      return bestTypical(n, k, ds:cons({i, snd}))
                                   end))
             end,
             Column = function (f)
-                return bestTypical(n, k, list.cons({i, f(k)}, ds))
+                return bestTypical(n, k, ds:cons({i, f(k)}))
             end,
             Nesting = function (f)
-                return bestTypical(n, k, list.cons({i, f(i)}, ds))
+                return bestTypical(n, k, ds:cons({i, f(i)}))
             end,
             Color = function (layer, intensity, color, doc)
                 local mb_fc1, mb_bc1
@@ -118,25 +117,25 @@ local function best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, mb_un, ds0)
                 return SDoc.SSGR(
                     {ansi.SGR.SetColor(layer, intensity, color)},
                     best(r, w, fits, n, k, mb_fc1, mb_bc1, mb_in, mb_it, mb_un,
-                         list.cons({i, doc}, dsRestore())))
+                         dsRestore():cons({i, doc})))
             end,
             Intensify = function (intensity, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetConsoleIntensity(intensity)},
                     best(r, w, fits, n, k, mb_fc, mb_bc, maybe.Just(intensity), mb_it, mb_un,
-                         list.cons({i, doc}, dsRestore())))
+                         dsRestore():cons({i, doc})))
             end,
             Italicize = function (italicized, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetItalicized(italicized)},
                     best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, maybe.Just(italicized), mb_un,
-                         list.cons({i, doc}, dsRestore())))
+                         dsRestore():cons({i, doc})))
             end,
             Underline = function (underline, doc)
                 return SDoc.SSGR(
                     {ansi.SGR.SetUnderlining(underline)},
                     best(r, w, fits, n, k, mb_fc, mb_bc, mb_in, mb_it, maybe.Just(underline),
-                         list.cons({i, doc}, dsRestore())))
+                         dsRestore():cons({i, doc})))
             end,
             RestoreFormat = function (mb_fc1, mb_bc1, mb_in1, mb_it1, mb_un1)
                 local sgrs = {
@@ -192,7 +191,7 @@ local function scan(k, ds0)
     if list.null(ds0) then
         return SDoc.SEmpty
     else
-        local d, ds = list.uncons(ds0)
+        local d, ds = ds0:uncons()
         return d:match {
             Fail = function ()
                 return SDoc.SFail
@@ -207,37 +206,37 @@ local function scan(k, ds0)
                 return SDoc.SText(len, text, scan(k+len, ds))
             end,
             FlatAlt = function (fst, _)
-                return scan(k, list.cons(fst, ds))
+                return scan(k, ds:cons(fst))
             end,
             Line = function ()
                 return SDoc.SLine(0, scan(0, ds))
             end,
             Cat = function (fst, snd)
-                return scan(k, list.cons(fst, list.cons(snd, ds)))
+                return scan(k, ds:cons(snd):cons(fst))
             end,
             Nest = function (_, doc)
-                return scan(k, list.cons(doc, ds))
+                return scan(k, ds:cons(doc))
             end,
             Union = function (_, snd)
-                return scan(k, list.cons(snd(), ds))
+                return scan(k, ds:cons(snd()))
             end,
             Column = function (f)
-                return scan(k, list.cons(f(k), ds))
+                return scan(k, ds:cons(f(k)))
             end,
             Nesting = function (f)
-                return scan(k, list.cons(f(0), ds))
+                return scan(k, ds:cons(f(0)))
             end,
             Color = function (_, _, _, doc)
-                return scan(k, list.cons(doc, ds))
+                return scan(k, ds:cons(doc))
             end,
             Intensify = function (_, doc)
-                return scan(k, list.cons(doc, ds))
+                return scan(k, ds:cons(doc))
             end,
             Italicize = function (_, doc)
-                return scan(k, list.cons(doc, ds))
+                return scan(k, ds:cons(doc))
             end,
             Underline = function (_, doc)
-                return scan(k, list.cons(doc, ds))
+                return scan(k, ds:cons(doc))
             end,
             RestoreFormat = function (_, _, _, _, _)
                 return scan(k, ds)

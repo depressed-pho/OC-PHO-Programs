@@ -13,7 +13,7 @@ SYNOPSIS
     print(maybe.fromJust(m2)) -- prints 43
 
     -- Mapping a function
-    local m3 = m1:bind(function (x)
+    local m3 = m1:map(function (x)
         return x + 1
     end)
     print(maybe.fromJust(m3)) -- prints 43
