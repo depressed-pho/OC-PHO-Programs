@@ -60,8 +60,8 @@ METHODS
     m:delete(key: any): self
         Remove a value associated with the given key if any.
 
-    m:size(): number
-        Return the number of key/value pairs in the map.
+    #m: number
+        The length operator returns the number of key/value pairs in the map.
 
     m:table(): table
         Return a shallow copy of the map as a table.

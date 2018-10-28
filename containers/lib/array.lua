@@ -46,7 +46,7 @@ function array:set(idx, x)
     return self
 end
 
-function array:length()
+function array:__len()
     return self.xs.n
 end
 
@@ -68,10 +68,11 @@ function array:clone()
     return ret
 end
 
-function array:concat(xs)
+function array.__concat(xs, ys)
     checkArg(1, xs, "table")
+    checkArg(2, ys, "table")
 
-    return self:clone():_concatInplace(xs)
+    return xs:clone():_concatInplace(ys)
 end
 function array:_concatInplace(xs)
     for i = 1, xs.xs.n do

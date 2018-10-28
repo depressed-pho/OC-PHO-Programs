@@ -15,14 +15,14 @@ t:subtest(
     end)
 
 t:subtest(
-    'map:size()',
+    'size',
     function ()
         t:plan(1)
 
         local m = map.new()
         m:set('foo', 1)
         m:set('bar', nil)
-        t:is(m:size(), 2, 'nil counts as a valid value')
+        t:is(#m, 2, 'nil counts as a valid value')
     end)
 
 t:subtest(
@@ -73,11 +73,11 @@ t:subtest(
 
         local m = map.new({a=1})
         t:is(m:has('a'), true, "has('a') before clear()")
-        t:is(m:size(), 1, "size() before clear()")
+        t:is(#m, 1, "size before clear()")
 
         m:clear()
         t:is(m:has('a'), false, "has('a') after clear()")
-        t:is(m:size(), 0, "size() after clear()")
+        t:is(#m, 0, "size after clear()")
     end)
 
 t:subtest(
@@ -96,7 +96,7 @@ t:subtest(
 
         local m = map.new({a=1, b=2}):set('c', nil)
         local n = map.new(m:entries())
-        t:is(n:size(), 3, 'size')
+        t:is(#n, 3, 'size')
         t:is(n:get('a'), 1, 'get(a)')
         t:is(n:get('b'), 2, 'get(b)')
         t:is(n:get('c'), nil, 'get(c)')

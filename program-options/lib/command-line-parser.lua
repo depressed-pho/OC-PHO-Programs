@@ -61,7 +61,7 @@ function classifier.new(tokens, extParsers)
 end
 
 function classifier:next() -- type, value, original-token
-    if self._tokens:length() == 0 then
+    if #self._tokens == 0 then
         return nil
     else
         local token = self._tokens:shift()

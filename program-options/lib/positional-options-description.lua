@@ -50,7 +50,7 @@ end
 function positionalOptionsDescription:nameForPosition(position)
     checkArg(1, position, "number")
 
-    if position <= self._finiteOpts:length() then
+    if position <= #self._finiteOpts then
         return self._finiteOpts:get(position)
     else
         return self._infiniteOpt

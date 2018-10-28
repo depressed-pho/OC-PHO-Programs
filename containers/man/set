@@ -45,8 +45,8 @@ METHODS
     s:delete(val: any): self
         Remove a value from a set if it is an element of the set.
 
-    s:size(): number
-        Return the number of elements in a set.
+    #s: number
+        The length operator returns the number of elements in a set.
 
     s:table(): table
         Return a shallow copy of the set as a sequence in an undefined

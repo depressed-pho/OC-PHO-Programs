@@ -42,7 +42,7 @@ function map.new(...)
     return self
 end
 
-function map:size()
+function map:__len()
     return self.sz
 end
 

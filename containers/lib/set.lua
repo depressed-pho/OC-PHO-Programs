@@ -45,7 +45,7 @@ function set.new(...)
     return self
 end
 
-function set:size()
+function set:__len()
     return self.sz
 end
 

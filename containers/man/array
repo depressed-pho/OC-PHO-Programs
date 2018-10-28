@@ -44,8 +44,8 @@ METHODS
         Set the n-th element of the array to the given value. An error
         is thrown if the index is out of range.
 
-    arr:length(): number
-        Return the length of the array.
+    #arr: number
+        The length operator returns the length of the array.
 
     arr:table(): table
         Return a shallow copy of the array as a sequence. The method
@@ -54,9 +54,9 @@ METHODS
     arr:clone(): array
         Return a shallow copy of the array.
 
-    arr:concat(xs: array): self
-        Return a shallow copy of the array with another array "xs"
-        appended to the end.
+    (xs .. ys): array
+        The concat operator returns a shallow copy of the first array with
+        the second array appended to the end.
 
     arr:entries(): function, any, any
         Return an iterator which generates pairs of (i, v) where i is

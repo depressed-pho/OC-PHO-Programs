@@ -51,20 +51,20 @@ t:subtest(
         t:diesOK(function () arr:set(5, 'D') end, 'out of range')
     end)
 
-t:is(array.new('a', 'b', nil, 'c'):length(), 4, 'array:length()')
+t:is(#array.new('a', 'b', nil, 'c'), 4, 'length')
 
 t:subtest(
-    'array:concat()',
+    'concat',
     function ()
         t:plan(2)
 
         local arr = array.new('a', 'b', nil, 'c')
         local tab = table.pack('a', 'b', nil, 'c')
         t:isDeeply(
-            arr:concat(array.new('d', 'e')):table(),
+            (arr .. array.new('d', 'e')):table(),
             table.pack('a', 'b', nil, 'c', 'd', 'e'),
-            'array:concat() can concatenate two arrays')
-        t:isDeeply(arr:table(), tab, 'array:concat() does not mutate the original array')
+            'The concat operator can concatenate two arrays')
+        t:isDeeply(arr:table(), tab, 'The concat operator does not mutate the original array')
     end)
 
 t:subtest(
@@ -358,10 +358,10 @@ t:subtest(
         end
 
         large = large:sort()
-        t:is(large:length(), 256, 'length of sorted list')
+        t:is(#large, 256, 'length of sorted list')
 
         local isSorted = true
-        for i = 1, large:length()-1 do
+        for i = 1, #large-1 do
             if large:get(i) > large:get(i+1) then
                 isSorted = false
             end

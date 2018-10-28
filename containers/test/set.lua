@@ -32,14 +32,14 @@ t:subtest(
     end)
 
 t:subtest(
-    'set:size()',
+    'size',
     function ()
         t:plan(1)
 
         local s = set.new()
         s:insert('a')
         s:insert(nil)
-        t:is(s:size(), 2, 'nil counts as a valid element')
+        t:is(#s, 2, 'nil counts as a valid element')
     end)
 
 t:subtest(
@@ -67,11 +67,11 @@ t:subtest(
 
         local s = set.new({'a'})
         t:is(s:has('a'), true, "has('a') before clear()")
-        t:is(s:size(), 1, "size() before clear()")
+        t:is(#s, 1, "size before clear()")
 
         s:clear()
         t:is(s:has('a'), false, "has('a') after clear()")
-        t:is(s:size(), 0, "size() after clear()")
+        t:is(#s, 0, "size after clear()")
     end)
 
 t:subtest(
