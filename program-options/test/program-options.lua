@@ -25,7 +25,7 @@ hidden:addOptions()
 local posDesc = po.positionalOptionsDescription.new()
 posDesc:add("pattern", 1):add("file", math.huge)
 
-local desc = po.optionsDescription.new()
+local desc = po.optionsDescription.new("Allowed options")
 desc:add(misc):add(outputCtrl)
 
 local allDesc = po.optionsDescription.new()
@@ -194,7 +194,7 @@ t:subtest(
 t:subtest(
     "positional and required arguments",
     function ()
-        t:plan(3)
+        t:plan(4)
 
         local vm     = po.variablesMap.new()
         local parser = po.commandLineParser.new():options(allDesc):positional(posDesc)
@@ -210,4 +210,15 @@ t:subtest(
                 vm:notify()
             end,
             "required but missing")
+    end)
+
+t:subtest(
+    "help message",
+    function ()
+        t:plan(1)
+
+        local help = po.commandLineHelp.new("grep"):options(desc):positional(posDesc)
+        t:diag(help:format(80))
+        t:is(help:format(80),
+             "Usage: grep [options] PATTERN [FILE...]\n")
     end)

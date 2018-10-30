@@ -76,6 +76,10 @@ METHODS
         Return an iterator which generates pairs of (k, v) where k is
         the key and v is the value.
 
+    m:values(): table
+        Return a sequence of values in a map in an unspecified
+        order.
+
   COMBINING MAPS
 
     m:union(xs: map[, combine: (l: any, r: any, k: any)->any]): map

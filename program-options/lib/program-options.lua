@@ -2,6 +2,7 @@ local lazy = require('lazy')
 local po   = {}
 
 -- Modules
+po.commandLineHelp              = lazy.require('program-options/command-line-help')
 po.commandLineParser            = lazy.require('program-options/command-line-parser')
 po.optionDescription            = lazy.require('program-options/option-description')
 po.optionsDescription           = lazy.require('program-options/options-description')

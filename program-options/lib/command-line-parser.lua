@@ -12,7 +12,7 @@ function commandLineParser.new()
 
     self._opts       = nil -- optionsDescription
     self._posOpts    = positionalOptionsDescription.new()
-    self._extParsers = array.new() -- array<((string)->string, string)>
+    self._extParsers = array.new() -- array<(string)->(string, string)>
     self._allowUnregistered = false
 
     return self
@@ -223,7 +223,13 @@ function commandLineParser:run(args)
         if not ret:has(name) then
             local sem = opt:semantic()
             if sem:isRequired() then
-                error("Missing option "..self:_format(name), 2)
+                -- But if it's a positional option, prefer it in the
+                -- error.
+                if self._posOpts:nameForPosition(positionalIdx) == name then
+                    error("Missing positional option #"..positionalIdx..": "..sem:name(), 2)
+                else
+                    error("Missing option "..self:_format(name), 2)
+                end
             else
                 local def = sem:default()
                 if def ~= nil then

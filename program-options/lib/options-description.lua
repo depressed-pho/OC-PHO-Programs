@@ -99,7 +99,8 @@ function optionsDescription:find(name)
     return self._optMap:get(name, nil)
 end
 
--- Returns set<optionDescription> consisting of all the known options.
+-- Returns a set<optionDescription> consisting of all the known
+-- options.
 function optionsDescription:options()
     return self._groups:foldl(
         function (xs, group)

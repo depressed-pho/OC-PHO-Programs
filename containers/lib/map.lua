@@ -122,6 +122,15 @@ function map:entries()
     end, s, var
 end
 
+function map:values()
+    local ret = {n = 0}
+    for _, v in pairs(self.m) do
+        ret[ret.n+1] = v
+        ret.n = ret.n + 1
+    end
+    return ret
+end
+
 function map:union(xs, combine)
     checkArg(1, xs, "table")
     checkArg(2, combine, "function", "nil")

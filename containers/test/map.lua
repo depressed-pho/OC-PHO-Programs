@@ -103,6 +103,16 @@ t:subtest(
     end)
 
 t:subtest(
+    'map:values()',
+    function ()
+        t:plan(1)
+
+        local values = map.new({a=1, b=2}):values()
+        table.sort(values)
+        t:isDeeply(values, {1, 2})
+    end)
+
+t:subtest(
     'map:clone()',
     function ()
         t:plan(2)
