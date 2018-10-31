@@ -58,7 +58,7 @@ function po.boolean()
 end
 
 function po.boolSwitch()
-    return po.valueSemantic.new():default(false):implicit(true):noArgs()
+    return po.valueSemantic.new():name("BOOL"):default(false):implicit(true):noArgs()
 end
 
 function po.enum(...)

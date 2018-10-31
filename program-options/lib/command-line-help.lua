@@ -52,12 +52,11 @@ function commandLineHelp:_usage()
         pp.text("Usage:"),
         pp.text(self._progName)
     }
-
     -- The [options] is shown iff there are any options that aren't
     -- positional.
     do
         local optSet = self._opts:options()
-        for _, name in self._posOpts:toMap():entries() do
+        for _, name in self._posOpts:entries() do
             -- Ugh, this is terribly inefficient O(n^2) but what else
             -- can we do?
             optSet = optSet:filter(
@@ -69,9 +68,31 @@ function commandLineHelp:_usage()
             table.insert(words, pp.text("[options]"))
         end
     end
+    -- Now we enumerate positional arguments.
+    for pos, name in self._posOpts:entries() do
+        local opt = self._opts:find(name)
+        if not opt then
+            error("Application error: positional argument #"..pos..
+                      " is defined as `"..name.."' but no such"..
+                      " option is declared", 2)
+        end
 
-    -- FIXME
+        local sem = opt:semantic()
+        if sem:isNoArgs() then
+            error("Application error: positional argument #"..pos..
+                      " is defined as `"..name.."' which is"..
+                      " supposed to take no arguments", 2)
+        end
 
+        local doc = pp.text(sem:name())
+        if pos == math.huge then
+            doc = doc .. pp.text("...")
+        end
+        if not sem:isRequired() then
+            doc = pp.brackets(doc)
+        end
+        table.insert(words, doc)
+    end
     return pp.nest(4, pp.fillSep(words))
 end
 

@@ -1,5 +1,4 @@
 local array = require('containers/array')
-local map   = require('containers/map')
 local positionalOptionsDescription = {}
 positionalOptionsDescription.__index = positionalOptionsDescription
 
@@ -59,15 +58,20 @@ function positionalOptionsDescription:nameForPosition(position)
     end
 end
 
--- Return a map whose keys are positions and values are option
--- names. If there is an option that can appear infinitely many times,
--- its position will be denoted as math.huge.
-function positionalOptionsDescription:toMap()
-    local m = map.new(self._finiteOpts:entries())
-    if self._infiniteOpt then
-        m:set(math.huge, self._infiniteOpt)
-    end
-    return m
+-- Return an iterator producing (pos, name) where pos is the position
+-- and name is the option name.  If there is an option that can appear
+-- infinitely many times, its position will be denoted as math.huge.
+function positionalOptionsDescription:entries()
+    return function (_, i)
+        i = i + 1
+        if i <= #self._finiteOpts then
+            return i, self._finiteOpts:get(i)
+        elseif i < math.huge then
+            return math.huge, self._infiniteOpt
+        else
+            return nil
+        end
+    end, nil, 0
 end
 
 return positionalOptionsDescription

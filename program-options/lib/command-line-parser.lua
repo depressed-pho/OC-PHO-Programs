@@ -139,8 +139,8 @@ function commandLineParser:run(args)
         if name then
             if not self:_gotOption(ret, name, optToken) then
                 error("Application error: positional argument #"..positionalIdx..
-                          " is defined as "..self:_format(name, optToken)..
-                          " but no such option has been declared", 2)
+                          " is defined as "..self:_format(name)..
+                          " but no such option is declared", 2)
             end
             positionalIdx = positionalIdx + 1
         else

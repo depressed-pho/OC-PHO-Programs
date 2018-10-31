@@ -14,6 +14,7 @@ function optionsDescription.new(caption)
     self._opts    = array.new() -- array<optionDescription>
     self._groups  = array.new() -- array<optionsDescription>
     self._optMap  = map.new()   -- map<string, optionDescription>
+    self._hidden  = false
 
     return self
 end
@@ -91,6 +92,13 @@ function optionsDescription:addOptions()
         return helper
     end
     return helper
+end
+
+-- State that options in this optionsDescription should not be shown
+-- in the help message.
+function optionsDescription:hidden()
+    self._hidden = true
+    return self
 end
 
 -- Returns optionDescription or nil.

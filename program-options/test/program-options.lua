@@ -8,7 +8,7 @@ local po = t:requireOK('program-options') or t:bailOut("Can't load program-optio
 local misc = po.optionsDescription.new("Miscellaneous")
 misc:addOptions()
     ("help,h"        , "produce help message")
-    ("verbose,V"     , po.integer():default(0):implicit(1), "set the verbosity level")
+    ("verbose,V"     , po.integer():name("LEVEL"):default(0):implicit(1), "set the verbosity level")
     ("invert-match,v", po.boolSwitch(), "select non-matching lines")
 
 local outputCtrl = po.optionsDescription.new("Output control")
@@ -17,7 +17,7 @@ outputCtrl:addOptions()
     ("devices,D", po.enum("read", "skip"):default("read"):name("ACTION"), "how to handle devices")
     ("exclude"  , po.sequence(po.string()):name("PATTERN"), "skip files that match the pattern")
 
-local hidden = po.optionsDescription.new()
+local hidden = po.optionsDescription.new():hidden()
 hidden:addOptions()
     ("pattern", po.string():required():name("PATTERN"))
     ("file"   , po.sequence(po.string()):name("FILE"))
@@ -25,7 +25,7 @@ hidden:addOptions()
 local posDesc = po.positionalOptionsDescription.new()
 posDesc:add("pattern", 1):add("file", math.huge)
 
-local desc = po.optionsDescription.new("Allowed options")
+local desc = po.optionsDescription.new()
 desc:add(misc):add(outputCtrl)
 
 local allDesc = po.optionsDescription.new()
@@ -217,8 +217,20 @@ t:subtest(
     function ()
         t:plan(1)
 
-        local help = po.commandLineHelp.new("grep"):options(desc):positional(posDesc)
-        t:diag(help:format(80))
-        t:is(help:format(80),
-             "Usage: grep [options] PATTERN [FILE...]\n")
+        local help = po.commandLineHelp.new("grep"):options(allDesc):positional(posDesc)
+        local got  = help:format(80)
+        local exp  = [[Usage: grep [options] PATTERN [FILE...]
+
+Miscellaneous:
+  -h, --help      produce help message
+  -V, --verbose[=LEVEL(=1)] (=0)
+                  set the verbosity level
+  -v, --invert-match[=BOOL(=true)] (=false)
+                  select non-matching lines
+
+Output control:
+]]
+        t:note(got)
+        t:diag(exp) -- FIXME: delete this
+        t:is(got, exp)
     end)
