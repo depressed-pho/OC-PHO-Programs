@@ -218,7 +218,7 @@ function commandLineParser:run(args)
     -- For options that have default values but didn't show up in
     -- args, apply those defaults here. And for required options raise
     -- errors.
-    for opt in self._opts:options():values() do
+    for opt in self._opts:allOpts():values() do
         local name = opt:canonicalName()
         if not ret:has(name) then
             local sem = opt:semantic()

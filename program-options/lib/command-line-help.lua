@@ -42,8 +42,9 @@ function commandLineHelp:format(width)
 end
 
 function commandLineHelp:_root()
-    local usage = self:_usage()
-    return usage -- FIXME
+    local usage    = self:_usage()
+    local optsHelp = self:_optsHelp(self._opts)
+    return usage % optsHelp
 end
 
 -- Build the "Usage:" line.
@@ -55,20 +56,21 @@ function commandLineHelp:_usage()
     -- The [options] is shown iff there are any options that aren't
     -- positional.
     do
-        local optSet = self._opts:options()
+        local allOpts = self._opts:allOpts()
         for _, name in self._posOpts:entries() do
             -- Ugh, this is terribly inefficient O(n^2) but what else
             -- can we do?
-            optSet = optSet:filter(
+            allOpts = allOpts:filter(
                 function (opt)
                     return not opt:match(name)
                 end)
         end
-        if #optSet > 0 then
+        if #allOpts > 0 then
             table.insert(words, pp.text("[options]"))
         end
     end
-    -- Now we enumerate positional arguments.
+    -- Now we enumerate positional arguments like "ARG1 ARG2
+    -- [ARG3...]".
     for pos, name in self._posOpts:entries() do
         local opt = self._opts:find(name)
         if not opt then
@@ -94,6 +96,24 @@ function commandLineHelp:_usage()
         table.insert(words, doc)
     end
     return pp.nest(4, pp.fillSep(words))
+end
+
+-- Format a possibly nested optionsDescription
+function commandLineHelp:_optsHelp(opts)
+    local paragraphs = {}
+
+    if #opts:caption() > 0 then
+        table.insert(paragraphs, pp.empty)
+        table.insert(paragraphs, pp.text(opts:caption()) .. pp.colon)
+    end
+
+    -- FIXME: opts
+
+    for _, group in opts:groups():entries() do
+        table.insert(paragraphs, self:_optsHelp(group))
+    end
+
+    return pp.vcat(paragraphs)
 end
 
 return commandLineHelp

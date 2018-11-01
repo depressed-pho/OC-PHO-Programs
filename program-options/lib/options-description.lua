@@ -107,12 +107,24 @@ function optionsDescription:find(name)
     return self._optMap:get(name, nil)
 end
 
+function optionsDescription:caption()
+    return self._caption
+end
+
+function optionsDescription:options()
+    return self._opts
+end
+
+function optionsDescription:groups()
+    return self._groups
+end
+
 -- Returns a set<optionDescription> consisting of all the known
 -- options.
-function optionsDescription:options()
+function optionsDescription:allOpts()
     return self._groups:foldl(
         function (xs, group)
-            return xs:union(group:options())
+            return xs:union(group:allOpts())
         end,
         set.new(self._opts:values()))
 end
