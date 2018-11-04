@@ -104,7 +104,20 @@ function po.sequence(inner)
         end
         return ret
     end
-    return po.valueSemantic.new():parser(parse):appender(append):merger(merge):default({})
+    local function format(seq)
+        checkArg(1, seq, "table")
+        local ret = {'{'}
+        for i = 1, #seq do
+            if i > 1 then
+                ret[#ret+1] = ','
+            end
+            ret[#ret+1] = inner:format(seq[i])
+        end
+        ret[#ret+1] = '}'
+        return table.concat(ret)
+    end
+    return po.valueSemantic.new():parser(parse):appender(append):merger(merge)
+           :formatter(format):default({})
 end
 
 return po

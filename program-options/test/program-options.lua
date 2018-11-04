@@ -225,7 +225,7 @@ Miscellaneous:
   -h, --help      produce help message
   -V, --verbose[=LEVEL(=1)] (=0)
                   set the verbosity level
-  -v, --invert-match[=BOOL(=true)] (=false)
+  -v, --invert-match
                   select non-matching lines
 
 Output control:

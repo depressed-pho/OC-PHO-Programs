@@ -31,19 +31,22 @@ function commandLineHelp:positional(posOpts)
     return self
 end
 
-function commandLineHelp:format(width)
+function commandLineHelp:format(width, optsColumnWidth)
     checkArg(1, width, "number")
+    checkArg(2, optsColumnWidth, "number", "nil")
+    optsColumnWidth = optsColumnWidth or math.floor(width / 3)
+
     if not self._opts then
         error("Misuse of commandLineHelp: options unset", 2)
     end
 
-    local doc = self:_root()
+    local doc = self:_root(optsColumnWidth)
     return pp.displayS(true, pp.renderPretty(1.0, width, doc))
 end
 
-function commandLineHelp:_root()
+function commandLineHelp:_root(optsColumnWidth)
     local usage    = self:_usage()
-    local optsHelp = self:_optsHelp(self._opts)
+    local optsHelp = self:_optsHelp(optsColumnWidth, self._opts)
     return usage % optsHelp
 end
 
@@ -98,8 +101,9 @@ function commandLineHelp:_usage()
     return pp.nest(4, pp.fillSep(words))
 end
 
--- Format a possibly nested optionsDescription
-function commandLineHelp:_optsHelp(opts)
+-- Format a possibly nested optionsDescription.
+function commandLineHelp:_optsHelp(optsColumnWidth, opts)
+    assert(not opts:isHidden())
     local paragraphs = {}
 
     if #opts:caption() > 0 then
@@ -107,13 +111,74 @@ function commandLineHelp:_optsHelp(opts)
         table.insert(paragraphs, pp.text(opts:caption()) .. pp.colon)
     end
 
-    -- FIXME: opts
+    for _, opt in opts:options():entries() do
+        table.insert(paragraphs, self:_optHelp(optsColumnWidth, opt))
+    end
 
     for _, group in opts:groups():entries() do
-        table.insert(paragraphs, self:_optsHelp(group))
+        if not group:isHidden() then
+            table.insert(paragraphs, self:_optsHelp(optsColumnWidth, group))
+        end
     end
 
     return pp.vcat(paragraphs)
+end
+
+-- Format a single optionDescription.
+function commandLineHelp:_optHelp(optsColumnWidth, opt) -- luacheck: ignore
+    local sem   = opt:semantic()
+    local parts = {}
+
+    if opt:shortName() then
+        table.insert(parts, pp.char('-')..pp.text(opt:shortName()))
+        if opt:longName() then
+            table.insert(parts, pp.comma + (pp.text("--")..pp.text(opt:longName())))
+            if not sem:isNoArgs() then
+                table.insert(parts, self:_argHelp(sem, true))
+            end
+        else
+            if not sem:isNoArgs() then
+                table.insert(parts, self:_argHelp(sem, false))
+            end
+        end
+    else
+        table.insert(parts, pp.indent(4, pp.text("--")..pp.text(opt:longName())))
+        if not sem:isNoArgs() then
+            table.insert(parts, self:_argHelp(sem, true))
+        end
+    end
+
+    return pp.indent(2, pp.hcat(parts))
+end
+
+-- Format an argument.
+function commandLineHelp:_argHelp(sem, isLong) -- luacheck: ignore self
+    local arg = pp.text(sem:name())
+
+    if sem:implicit() == nil then
+        if isLong then
+            arg = pp.equals..arg
+        else
+            arg = pp.empty + arg
+        end
+    else
+        if isLong then
+            arg = pp.brackets(
+                pp.equals..arg..pp.parens(
+                    pp.equals..pp.string(sem:format(sem:implicit()))))
+        else
+            arg = pp.empty + pp.brackets(
+                arg..pp.parens(
+                    pp.equals..pp.string(sem:format(sem:implicit()))))
+        end
+    end
+
+    if sem:default() ~= nil then
+        arg = arg + pp.parens(
+            pp.equals..pp.string(sem:format(sem:default())))
+    end
+
+    return arg
 end
 
 return commandLineHelp

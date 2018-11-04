@@ -101,6 +101,10 @@ function optionsDescription:hidden()
     return self
 end
 
+function optionsDescription:isHidden()
+    return self._hidden
+end
+
 -- Returns optionDescription or nil.
 function optionsDescription:find(name)
     checkArg(1, name, "string")
