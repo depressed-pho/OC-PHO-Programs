@@ -31,6 +31,53 @@ function commandLineHelp:positional(posOpts)
     return self
 end
 
+function commandLineHelp:print(...)
+    local args = table.pack(...)
+    local stream, width
+    local optsColumnWidth = nil
+    if args.n == 0 then
+        stream = io.output()
+        width  = self:_termWidth()
+    elseif args.n == 1 then
+        if type(args[1]) == "number" then
+            stream = io.output()
+            width  = args[1]
+        else
+            stream = args[1]
+            width  = 80
+        end
+    elseif args.n == 2 then
+        if type(args[1]) == "number" then
+            checkArg(2, args[2], "number", "nil")
+            stream = io.output()
+            width  = args[1]
+            optsColumnWidth = args[2]
+        else
+            checkArg(2, args[2], "number")
+            stream = args[1]
+            width  = args[2]
+        end
+    else
+        checkArg(2, args[2], "number")
+        checkArg(3, args[3], "number", "nil")
+        stream = args[1]
+        width  = args[2]
+        optsColumnWidth = args[3]
+    end
+    stream:write(self:format(width, optsColumnWidth))
+end
+
+function commandLineHelp:_termWidth() -- luacheck: ignore self
+    -- Do we have the term API from OpenOS? If so we use it.
+    local ok, result = pcall(require, "term")
+    if ok then
+        local w, _, _, _, _, _ = result.getViewport()
+        return w
+    else
+        error("Unsupported OS: cannot detect the width of the terminal")
+    end
+end
+
 function commandLineHelp:format(width, optsColumnWidth)
     checkArg(1, width, "number")
     checkArg(2, optsColumnWidth, "number", "nil")
@@ -41,7 +88,7 @@ function commandLineHelp:format(width, optsColumnWidth)
     end
 
     local doc = self:_root(optsColumnWidth)
-    return pp.displayS(true, pp.renderPretty(1.0, width, doc))
+    return pp.displayS(true, pp.renderPretty(1.0, width, doc)).."\n"
 end
 
 function commandLineHelp:_root(optsColumnWidth)
@@ -126,29 +173,36 @@ end
 
 -- Format a single optionDescription.
 function commandLineHelp:_optHelp(optsColumnWidth, opt) -- luacheck: ignore
-    local sem   = opt:semantic()
-    local parts = {}
+    local sem      = opt:semantic()
+    local optParts = {}
 
     if opt:shortName() then
-        table.insert(parts, pp.char('-')..pp.text(opt:shortName()))
+        table.insert(optParts, pp.char('-')..pp.text(opt:shortName()))
         if opt:longName() then
-            table.insert(parts, pp.comma + (pp.text("--")..pp.text(opt:longName())))
+            table.insert(optParts, pp.comma + (pp.text("--")..pp.text(opt:longName())))
             if not sem:isNoArgs() then
-                table.insert(parts, self:_argHelp(sem, true))
+                table.insert(optParts, self:_argHelp(sem, true))
             end
         else
             if not sem:isNoArgs() then
-                table.insert(parts, self:_argHelp(sem, false))
+                table.insert(optParts, self:_argHelp(sem, false))
             end
         end
     else
-        table.insert(parts, pp.indent(4, pp.text("--")..pp.text(opt:longName())))
+        table.insert(optParts, pp.indent(4, pp.text("--")..pp.text(opt:longName())))
         if not sem:isNoArgs() then
-            table.insert(parts, self:_argHelp(sem, true))
+            table.insert(optParts, self:_argHelp(sem, true))
         end
     end
 
-    return pp.indent(2, pp.hcat(parts))
+    local optDoc = pp.hcat(optParts)
+    if opt:description() then
+        local descDoc = self:_descHelp(opt:description())
+        return pp.indent(2, pp.fillBreak(optsColumnWidth-2, optDoc)..
+                             pp.text("  ")..descDoc)
+    else
+        return pp.indent(2, optDoc)
+    end
 end
 
 -- Format an argument.
@@ -179,6 +233,35 @@ function commandLineHelp:_argHelp(sem, isLong) -- luacheck: ignore self
     end
 
     return arg
+end
+
+-- Format a description.
+function commandLineHelp:_descHelp(desc) -- luacheck: ignore self
+    local parts = {}
+    local start = 1
+    while true do
+        local sepPos = desc:find("[ \n]", start)
+        if sepPos == nil then
+            parts[#parts+1] = pp.text(desc:sub(start))
+            break
+        else
+            local sep
+            if desc:sub(sepPos, sepPos) == " " then
+                sep = pp.space
+            else
+                sep = pp.linebreak
+            end
+
+            if sepPos == start then
+                parts[#parts+1] = sep
+            else
+                parts[#parts+1] = pp.text(desc:sub(start, sepPos-1))
+                parts[#parts+1] = sep
+            end
+            start = sepPos + 1
+        end
+    end
+    return pp.hcat(parts)
 end
 
 return commandLineHelp

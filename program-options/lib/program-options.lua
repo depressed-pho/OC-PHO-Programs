@@ -21,7 +21,7 @@ function po.string()
 end
 
 function po.integer()
-    return po.valueSemantic.new():parser(
+    return po.valueSemantic.new():name("INT"):parser(
         function (strVal)
             if strVal:match("^%-?%d+$") then
                 return tonumber(strVal)
@@ -32,7 +32,7 @@ function po.integer()
 end
 
 function po.number()
-    return po.valueSemantic.new():parser(
+    return po.valueSemantic.new():name("NUM"):parser(
         function (strVal)
             local num = tonumber(strVal)
             if num then
@@ -44,7 +44,7 @@ function po.number()
 end
 
 function po.boolean()
-    return po.valueSemantic.new():parser(
+    return po.valueSemantic.new():name("BOOL"):parser(
         function (strVal)
             local lower = strVal:lower()
             if lower == "true" or lower == "yes" then
@@ -63,7 +63,7 @@ end
 
 function po.enum(...)
     local args = table.pack(...)
-    return po.valueSemantic.new():parser(
+    return po.valueSemantic.new():name("ENUM"):parser(
         function (strVal)
             for i = 1, #args do
                 if strVal == args[i] then

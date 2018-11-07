@@ -222,15 +222,18 @@ t:subtest(
         local exp  = [[Usage: grep [options] PATTERN [FILE...]
 
 Miscellaneous:
-  -h, --help      produce help message
+  -h, --help                produce help message
   -V, --verbose[=LEVEL(=1)] (=0)
-                  set the verbosity level
-  -v, --invert-match
-                  select non-matching lines
+                            set the verbosity level
+  -v, --invert-match        select non-matching lines
 
 Output control:
+      --color=BOOL          whether to enable colored output
+  -D, --devices=ACTION (=read)
+                            how to handle devices
+      --exclude=PATTERN (={})
+                            skip files that match the pattern
 ]]
         t:note(got)
-        t:diag(exp) -- FIXME: delete this
         t:is(got, exp)
     end)
