@@ -15,6 +15,10 @@ function po.parseCommandLine(args, desc)
     return po.commandLineParser.new():options(desc):run(args)
 end
 
+function po.printHelp(progName, desc)
+    po.commandLineHelp.new(progName):options(desc):print()
+end
+
 -- Predefined value semantics
 function po.string()
     return po.valueSemantic.new()
