@@ -21,7 +21,7 @@ This package is modeled after
 
 ## Supported OSes
 
-This module is OS-independent and should work on any OpenComputers
+This package is OS-independent and should work on any OpenComputers
 OSes. But due to the current limitation of OC, most of SGR commands
 don't work at all. In particular, none of OC GPUs can display bold or
 underlined characters.

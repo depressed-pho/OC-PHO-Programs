@@ -11,3 +11,4 @@ PHO's programs for OpenComputers mod
 * [mutex](mutex): Low-level synchronization based on the thread API
 * [program-options](program-options): Advanced program option parser
 * [tap](tap): Implementation of Test Anything Protocol, used for unit tests
+* [wl-pprint](wl-pprint): Pretty-printing combinators

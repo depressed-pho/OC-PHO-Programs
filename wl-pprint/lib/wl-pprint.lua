@@ -259,7 +259,7 @@ function pp.char(char)
         return pp.line
     else
         checkArg(1, char, "string")
-        assert(#char == 1)
+        assert(wlen(char) == 1)
         return Doc.Char(char)
     end
 end
@@ -578,23 +578,6 @@ local named = {
 for k, v in pairs(named) do
     pp[k] = pp.char(v)
 end
--- The document lparen contains a left parenthesis, "(".
--- The document rparen contains a right parenthesis, ")".
--- The document langle contains a left angle, "<".
--- The document rangle contains a left angle, "<".
--- The document lbrace contains a left brace, "{".
--- The document rbrace contains a right brace, "}".
--- The document lbracket contains a left square bracket, "[".
--- The document rbracket contains a right square bracket, "]".
--- The document squote contains a single quote, "'".
--- The document dquote contains a double quote, '"'.
--- The document semi contains a semicolon, ";".
--- The document colon contains a colon, ":".
--- The document comma contains a comma, ",".
--- The document space contains a single space, " ".
--- The document dot contains a single dot, ".".
--- The document backslash contains a back slash, "\".
--- The document equals contains an equal sign, "=".
 
 -- ANSI formatting combinators
 
@@ -655,6 +638,8 @@ function pp.plain(doc)
 end
 
 -- Rendering and displaying documents
+
+pp.SDoc = SDoc -- re-export
 
 -- renderPretty(ribbonfrac, width, x) renders document x with a page
 -- width of width and a ribbon width of (ribbonfrac * width)

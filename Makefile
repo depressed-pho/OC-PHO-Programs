@@ -56,6 +56,7 @@ dist:
 	cp program-options/test/*.lua	_dist/test
 	cp wl-pprint/lib/wl-pprint.lua	_dist/lib
 	cp wl-pprint/lib/*.lua		_dist/lib/wl-pprint
+	cp wl-pprint/man/*		_dist/man
 	cp wl-pprint/test/*.lua		_dist/test
 	tar -cvf OC-PHO-Programs.tar -C _dist .
 	rm -rf _dist

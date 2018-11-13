@@ -1,0 +1,578 @@
+NAME
+    wl-pprint -- Pretty-printing combinators
+
+SYNOPSIS
+    local pp = require("wl-pprint")
+
+    local doc = pp.text("list") +
+                pp.list({pp.number(10), pp.number(200), pp.number(3000)})
+    pp.displayIO(io.output(), pp.renderPretty(1.0, 15, doc))
+    -- prints:
+    --   list {10
+    --        ,200
+    --        ,3000}
+
+
+DESCRIPTION
+    This package provides a functional pretty printer given by Philip
+    Wadler and Daan Leijen.
+
+THE DOCUMENT TYPE
+    The abstract immutable data type "Doc" represents pretty
+    documents. More specifically, a value of type Doc represents a
+    non-empty set of possible renderings of a document. The rendering
+    functions select one of these possibilities.
+
+BASIC COMBINATORS
+    pp.empty: Doc
+        The empty document is, indeed, empty. Although empty has no
+        content, it does have a 'height' of 1 and behaves exactly like
+        pp.text("") and is therefore not a unit of the % operator.
+
+    pp.char(c: string): Doc
+        The document pp.char(c) contains the literal character c
+        (which should actually be a string with length 1). The
+        character shouldn't be a newline ('\n'), pp.line should be
+        used for line breaks.
+
+    pp.text(s: string): Doc
+        The document pp.text(s) contains the literal string s. The
+        string shouldn't contain any newline ('\n') characters. If the
+        string contains newline characters, the function pp.string()
+        should be used.
+
+    pp.string(s: string): Doc
+        The document pp.string(s) concatenates all characters in s
+        using pp.line for newline characters and pp.char() for all
+        other characters. It should be used instead of pp.text()
+        whenever the text contains newline characters.
+
+    pp.number(n: number): Doc
+        The document pp.number(n) shows the literal number n using
+        pp.text().
+
+    pp.boolean(b: boolean): Doc
+        The document pp.boolean(b) shows the literal boolean b using
+        pp.text().
+
+    pp.nest(i: number, x: Doc): Doc
+        The document pp.nest(i, x) renders document x with the current
+        indentation level increased by i (See also pp.hang(),
+        pp.align() and pp.indent()).
+
+            pp.nest(2, pp.text("hello") % pp.text("world"))
+                % pp.text("!")
+
+        outputs as:
+
+            hello
+              world
+            !
+
+    pp.line: Doc
+        The line document advances to the next line and indents to the
+        current nesting level. Document line behaves like pp.text(' ')
+        if the line break is undone by pp.group().
+
+    pp.linebreak: Doc
+        The linebreak document advances to the next line and indents
+        to the current nesting level. Document linebreak behaves like
+        pp.empty if the line break is undone by pp.group().
+
+    pp.group(x: Doc): Doc
+        The group combinator is used to specify alternative
+        layouts. The document pp.group(x) undoes all line breaks in
+        document x. The resulting line is added to the current line if
+        that fits the page. Otherwise, the document x is rendered
+        without any changes.
+
+    pp.softline: Doc
+        The document softline behaves like pp.space if the resulting
+        output fits the page, otherwise it behaves like pp.line.
+
+            pp.softline = pp.group(pp.line)
+
+    pp.softbreak: Doc
+        The document softbreak behaves like pp.empty if the resulting
+        output fits the page, otherwise it behaves like pp.line.
+
+            pp.softbreak = pp.group(pp.linebreak)
+
+    pp.hardline: Doc
+        A linebreak that will never be flattened; it is guaranteed to
+        render as a newline.
+
+    pp.flatAlt(fst: Doc, snd: Doc): Doc
+        A document that is normally rendered as the first argument,
+        but when flattened, is rendered as the second document.
+
+ALIGNMENT COMBINATORS
+    The combinators in this section cannot be described by Wadler's
+    original combinators. They align their output relative to the
+    current output position -- in contrast to nest which always aligns
+    to the current nesting level. This deprives these combinators from
+    being `optimal'. In practice however they prove to be very
+    useful. The combinators in this section should be used with care,
+    since they are more expensive than the other combinators. For
+    example, pp.align() shouldn't be used to pretty print all
+    top-level declarations of a language, but using pp.hang() for let
+    expressions is fine.
+
+    pp.align(x: Doc): Doc
+        The document pp.align(x) renders document x with the nesting
+        level set to the current column. It is used for example to
+        implement pp.hang().
+
+        As an example, we will put a document right above another one,
+        regardless of the current nesting level:
+
+            pp.text("hi") +
+                pp.align(
+                    pp.text("nice") & pp.text("world"))
+
+        which will be layed out as:
+
+            hi nice
+               world
+
+    pp.hang(i: number, x: Doc): Doc
+        The hang combinator implements hanging indentation. The
+        document pp.hang(i, x) renders document x with a nesting level
+        set to the current column plus i. The following example uses
+        hanging indentation for some text:
+
+            pp.hang(4, pp.fillSep {
+                           pp.text("the"), pp.text("hang"),
+                           pp.text("combinator"), pp.text("indents"),
+                           pp.text("these"), pp.text("words"),
+                           pp.text("!")
+                       })
+
+        Which lays out on a page with a width of 20 characters as:
+
+            the hang combinator
+                indents these
+                words !
+
+    pp.indent(i: number, x: Doc): Doc
+        The document pp.indent(i, x) indents document x with i spaces.
+
+            pp.indent(4, pp.fillSep {
+                             pp.text("the"), pp.text("indent"),
+                             pp.text("combinator"), pp.text("indents"),
+                             pp.text("these"), pp.text("words"),
+                             pp.text("!")
+                         })
+
+        Which lays out with a page width of 20 as:
+
+                the indent
+                combinator
+                indents these
+                words !
+
+    pp.encloseSep(l: Doc, r: Doc, sep: Doc, xs: table): Doc
+
+        The document pp.encloseSep(l, r, sep, xs) concatenates a
+        sequence of documents xs separated by sep and encloses the
+        resulting document by l and r. The documents are rendered
+        horizontally if that fits the page. Otherwise they are aligned
+        vertically. All separators are put in front of the
+        elements. For example, the combinator pp.list() can be defined
+        with encloseSep:
+
+            local function list(xs)
+                return pp.encloseSep(pp.lbrace, pp.rbrace, pp.comma, xs)
+            end
+            local test = pp.text("list") +
+                         list {
+                             pp.number(10),
+                             pp.number(200),
+                             pp.number(3000)
+                         }
+
+        Which is layed out with a page width of 20 as:
+
+            list {10,200,3000}
+
+        But when the page width is 15, it is layed out as:
+
+            list {10
+                 ,200
+                 ,3000}
+
+    pp.list(xs: table): Doc
+        The document pp.list(xs) comma separates a sequence of
+        documents xs and encloses them in braces. The documents are
+        rendered horizontally if that fits the page. Otherwise they
+        are aligned vertically. All comma separators are put in front
+        of the elements.
+
+OPERATORS
+    x .. y
+        The document (x .. y) concatenates document x and y.
+
+    x + y
+        The document (x + y) concatenates document x and y with a
+        pp.space in between.
+
+    x & y
+        The document (x & y) concatenates document x and y with a
+        pp.line in between.
+
+    x / y
+        The document (x / y) concatenates document x and y with a
+        pp.softline in between. This effectively puts x and y either
+        next to each other (with a space in between) or underneath
+        each other.
+
+    x % y
+        The document (x % y) concatenates document x and y with a
+        pp.linebreak in between.
+
+    x // y
+        The document (x // y) concatenates document x and y with a
+        pp.softbreak in between. This effectively puts x and y either
+        right next to each other or underneath each other.
+
+LIST COMBINATORS
+    pp.hsep(xs: table): Doc
+        The document pp.hsep(xs) concatenates all documents in a
+        sequence xs horizontally with '+'.
+
+    pp.vsep(xs: table): Doc
+        The document pp.vsep(xs) concatenates all documents in a
+        sequence xs vertically with '&'. If a pp.group() undoes the
+        line breaks inserted by pp.vsep(), all documents are separated
+        with a pp.space.
+
+            pp.text("some") + pp.vsep {
+                                  pp.text("text"),
+                                  pp.text("to"),
+                                  pp.text("lay"),
+                                  pp.text("out")
+                              }
+
+        This is layed out as:
+
+            some text
+            to
+            lay
+            out
+
+    pp.fillSep(xs: table): Doc
+        The document pp.fillSep(xs) concatenates a sequence of
+        documents xs horizontally with '+' as long as its fits the
+        page, than inserts a pp.line and continues doing that for all
+        documents in xs.
+
+    pp.sep(xs: table): Doc
+        The document pp.sep(xs) concatenates all documents in a
+        sequence xs either horizontally with '+', if it fits the page,
+        or vertically with '&'.
+
+    pp.hcat(xs: table): Doc
+        The document pp.hcat(xs) concatenates all documents in a
+        sequence xs horizontally with '..'.
+
+    pp.vcat(xs: table): Doc
+        The document pp.vcat(xs) concatenates all documents in a
+        sequence xs vertically with '%'. If a pp.group() undoes the
+        line breaks inserted by pp.vcat(), all documents are directly
+        concatenated.
+
+    pp.fillCat(xs: table): Doc
+        The document pp.fillCat(xs) concatenates a sequence of
+        documents xs horizontally with '..' as long as its fits the
+        page, than inserts a pp.linebreak and continues doing that for
+        all documents in xs.
+
+    pp.cat(xs: table): Doc
+        The document pp.cat(xs) concatenates all documents in a
+        sequence xs either horizontally with '..', if it fits the
+        page, or vertically with '%'.
+
+    pp.punctuate(p: Doc, xs: table): Doc
+
+        pp.punctuate(p, xs) concatenates all documents in a sequence
+        xs with document p except for the last document.
+
+        pp.parens(
+            pp.align(
+                pp.cat(
+                    pp.punctuate(
+                        pp.comma,
+                        { pp.text("words"),
+                          pp.text("in"),
+                          pp.text("a"),
+                          pp.text("tuple")
+                        }))))
+
+        This is layed out on a page width of 20 as:
+
+            (words,in,a,tuple)
+
+        But when the page width is 15, it is layed out as:
+
+            (words,
+             in,
+             a,
+             tuple)
+
+        (If you want put the commas in front of their elements instead
+        of at the end, you should use pp.encloseSep().)
+
+FILLER COMBINATORS
+    pp.fill(i: number, x: Doc): Doc
+        The document pp.fill(i, x) renders document x. It then appends
+        spaces until the width is equal to i. If the width of x is
+        already larger, nothing is appended.
+
+            pp.text("let") +
+            pp.align(
+                pp.vcat {
+                    pp.fill(6, pp.text("empty")) +
+                        pp.text("::") + pp.text("Doc"),
+                    pp.fill(6, pp.text("nest")) +
+                        pp.text("::") + pp.text("Int -> Doc -> Doc"),
+                    pp.fill(6, pp.text("linebreak")) +
+                        pp.text("::") + pp.text("Doc")
+                })
+
+        This is layed out as:
+
+            let empty  :: Doc
+                nest   :: Int -> Doc -> Doc
+                linebreak :: Doc
+
+    pp.fillBreak(i: number, x: Doc): Doc
+        The document pp.fillBreak(i, x) first renders document x. It
+        then appends spaces until the width is equal to i. If the
+        width of x is already larger than i, the nesting level is
+        increased by i and a pp.line is appended.
+
+            pp.text("let") +
+            pp.align(
+                pp.vcat {
+                    pp.fillBreak(6, pp.text("empty")) +
+                        pp.text("::") + pp.text("Doc"),
+                    pp.fillBreak(6, pp.text("nest")) +
+                        pp.text("::") + pp.text("Int -> Doc -> Doc"),
+                    pp.fillBreak(6, pp.text("linebreak")) +
+                        pp.text("::") + pp.text("Doc")
+                })
+
+        This is layed out as:
+
+            let empty  :: Doc
+                nest   :: Int -> Doc -> Doc
+                linebreak
+                       :: Doc
+
+BRACKETING COMBINATORS
+    pp.enclose(l: Doc, r: Doc, x: Doc): Doc
+        The document pp.enclose(l, r, x) encloses document x between
+        documents l and r using '..'.
+
+    pp.squotes(x: Doc): Doc
+        Document pp.squotes(x) encloses document x with single quotes
+        "'".
+
+    pp.dquotes(x: Doc): Doc
+        Document pp.dquotes(x) encloses document x with double quotes
+        '"'.
+
+    pp.parens(x: Doc): Doc
+        Document pp.parens(x) encloses document x in parenthesis, "("
+        and ")".
+
+    pp.angles(x: Doc): Doc
+        Document pp.angles(x) encloses document x in angles, "<" and
+        ">".
+
+    pp.braces(x: Doc): Doc
+        Document pp.braces(x) encloses document x in braces, "{" and
+        "}".
+
+    pp.brackets(x: Doc): Doc
+        Document pp.brackets(x) encloses document x in square
+        brackets, "[" and "]".
+
+NAMED CHARACTERS COMBINATORS
+    pp.lparen:    Doc -- '('
+    pp.rparen:    Doc -- ')'
+    pp.langle:    Doc -- '<'
+    pp.rangle:    Doc -- '>'
+    pp.lbrace:    Doc -- '{'
+    pp.rbrace:    Doc -- '}'
+    pp.squote:    Doc -- "'"
+    pp.dquote:    Doc -- '"'
+    pp.semi:      Doc -- ';'
+    pp.colon:     Doc -- ':'
+    pp.comma:     Doc -- ','
+    pp.space:     Doc -- ' '
+    pp.dot:       Doc -- '.'
+    pp.backslash: Doc -- '\'
+    pp.equals:    Doc -- '='
+        These documents contain a single corresponding symbol.
+
+ANSI FORMATTING COMBINATORS
+    These combinators produce ANSI escape sequences to specify colors
+    and styles of the output. However, due to the current limitation
+    of OC, most of SGR commands don't work at all. In particular, none
+    of OC GPUs can display bold or underlined characters.
+
+    FORECOLOR COMBINATORS
+        pp.black  (x: Doc): Doc
+        pp.red    (x: Doc): Doc
+        pp.green  (x: Doc): Doc
+        pp.yellow (x: Doc): Doc
+        pp.blue   (x: Doc): Doc
+        pp.magenta(x: Doc): Doc
+        pp.cyan   (x: Doc): Doc
+        pp.white  (x: Doc): Doc
+            Display a document with the corresponding vivid forecolor.
+
+        pp.dullBlack  (x: Doc): Doc
+        pp.dullRed    (x: Doc): Doc
+        pp.dullGreen  (x: Doc): Doc
+        pp.dullYellow (x: Doc): Doc
+        pp.dullBlue   (x: Doc): Doc
+        pp.dullMagenta(x: Doc): Doc
+        pp.dullCyan   (x: Doc): Doc
+        pp.dullWhite  (x: Doc): Doc
+            Display a document with the corresponding dull forecolor.
+
+    BACKCOLOR COMBINATORS
+        pp.onBlack  (x: Doc): Doc
+        pp.onRed    (x: Doc): Doc
+        pp.onGreen  (x: Doc): Doc
+        pp.onYellow (x: Doc): Doc
+        pp.onBlue   (x: Doc): Doc
+        pp.onMagenta(x: Doc): Doc
+        pp.onCyan   (x: Doc): Doc
+        pp.onWhite  (x: Doc): Doc
+            Display a document with the corresponding vivid backcolor.
+
+        pp.onDullBlack  (x: Doc): Doc
+        pp.onDullRed    (x: Doc): Doc
+        pp.onDullGreen  (x: Doc): Doc
+        pp.onDullYellow (x: Doc): Doc
+        pp.onDullBlue   (x: Doc): Doc
+        pp.onDullMagenta(x: Doc): Doc
+        pp.onDullCyan   (x: Doc): Doc
+        pp.onDullWhite  (x: Doc): Doc
+            Display a document with the corresponding dull backcolor.
+
+    EMBOLDENING COMBINATORS
+        pp.bold(x: Doc): Doc
+            Displays a document in a heavier font weight.
+
+        pp.debold(x: Doc): Doc
+            Displays a document in the normal font weight.
+
+    UNDERLINING COMBINATORS
+        pp.underline(X: Doc): Doc
+            Displays a document with underlining.
+
+        pp.noUnderline(x: doc): Doc
+            Displays a document with no underlining.
+
+    FORMATTING ELIMINATION COMBINATORS
+        pp.plain(x: Doc): Doc
+            Removes all colorisation, emboldening and underlining from
+            a document.
+
+RENDERING AND DISPLAYING DOCUMENTS
+    SIMPLE (I.E., RENDERED) DOCUMENTS
+        The algebraic data type "SDoc" represents rendered documents
+        and is used by the display functions.
+
+        Whereas values of the data type "Doc" represent non-empty sets
+        of possible renderings of a document, values of the data type
+        "SDoc" represent single renderings of a document.
+
+        The field "len" in SText contains the length of the
+        string. The field "lv" in SLine contains the indentation for
+        that line. The field "sgrs" in SSGR is a sequence of SGR from
+        the package "ansi-terminal". The library provides two default
+        display functions pp.displayS() and pp.displayIO(). You can
+        provide your own display function by writing a function from a
+        SDoc to your own output format.
+
+            local adt = require('algebraic-data-types')
+            pp.SDoc = adt.define(
+                adt.constructor('SFail'),
+                adt.constructor('SEmpty'),
+                adt.constructor('SChar', adt.field('char'), adt.field('sDoc')),
+                adt.constructor('SText', adt.field('len'), adt.field('text'),
+                                         adt.field('sDoc')),
+                adt.constructor('SLine', adt.field('lv'), adt.field('sDoc')),
+                adt.constructor('SSGR', adt.field('sgrs'), adt.field('sDoc')))
+
+    pp.renderPretty(ribbonfrac: number, width: number, x: Doc): SDoc
+        Render document x with a page width of width and a ribbon
+        width of (ribbonfrac * width) characters. The ribbon width is
+        the maximal amount of non-indentation characters on a
+        line. The parameter ribbonfrac should be between 0.0 and
+        1.0. If it is lower or higher, the ribbon width will be 0 or
+        width respectively.
+
+    pp.renderCompact(x: Doc): SDoc
+        Render document x without adding any indentation. Since no
+        'pretty' printing is involved, this renderer is very fast. The
+        resulting output contains fewer characters than a pretty
+        printed version and can be used for output that is read by
+        other programs. This rendering function does not add any
+        colorisation information.
+
+    pp.renderSmart(ribbonfrac: number, width: number, x: Doc): SDoc
+        A slightly smarter rendering algorithm with more lookahead. It
+        provides provide earlier breaking on deeply nested structures
+        For example, consider this python-ish pseudocode:
+        "fun(fun(fun(fun(fun([abcdefg, abcdefg])))))" If we put a
+        softbreak (+ nesting 2) after each open parenthesis, and align
+        the elements of the list to match the opening brackets, this
+        will render with pp.renderPretty() and a page width of 20 as:
+
+            fun(fun(fun(fun(fun([
+                                | abcdef,
+                                | abcdef,
+                                ]
+              )))))             |
+
+        where the 20c. boundary has been marked with "|". Because
+        pp.renderPretty() only uses one-line lookahead, it sees that
+        the first line fits, and is stuck putting the second and third
+        lines after the 20-c mark. In contrast, pp.renderSmart() will
+        continue to check that the potential document up to the end of
+        the indentation level. Thus, it will format the document as:
+
+            fun(                |
+              fun(              |
+                fun(            |
+                  fun(          |
+                    fun([       |
+                          abcdef,
+                          abcdef,
+                        ]       |
+              )))))             |
+
+        Which fits within the 20c. boundary.
+
+    pp.displayS(color: boolean, sDoc: SDoc): string
+        This function takes the output sDoc from a rendering function
+        and transforms it to a string. ANSI color information will be
+        output if the parameter "color" is true, or discarded
+        otherwise.
+
+    pp.displayIO(handle: any, [color: boolean, ]sDoc: SDoc): void
+        This function writes sDoc to the file handle "handle". If the
+        optional parameter "color" is given, ANSI color information
+        will be output if the parameter "color" is true, or discarded
+        otherwise. If it is omitted, the function tries to determine
+        if the file handle is actually a TTY, and if it looks like a
+        TTY it will output ANSI color information.
+
+SEE ALSO
+    ansi-terminal
