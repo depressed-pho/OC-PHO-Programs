@@ -14,7 +14,7 @@ SYNOPSIS
 
 
 DESCRIPTION
-    This package provides a functional pretty printer given by Philip
+    This module provides a functional pretty printer given by Philip
     Wadler and Daan Leijen.
 
 THE DOCUMENT TYPE

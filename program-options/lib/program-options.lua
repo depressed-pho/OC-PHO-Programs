@@ -21,7 +21,7 @@ end
 
 -- Predefined value semantics
 function po.string()
-    return po.valueSemantic.new()
+    return po.valueSemantic.new():name("STR")
 end
 
 function po.integer()

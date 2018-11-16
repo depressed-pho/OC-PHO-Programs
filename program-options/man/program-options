@@ -1,0 +1,121 @@
+NAME
+    program-options - Advanced program option parser
+
+SYNOPSIS
+    local po = require("program-options")
+
+    local desc = po.optionsDescription.new("Allowed options")
+    desc.addOptions()
+        ("help", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    local vm = po.variablesMap.new()
+    vm:store(po.parseCommandLine({"-c", "10"}, desc)
+    vm:notify()
+
+    if vm:has("help") then
+        po.printHelp("prog", desc)
+    else
+        print("Compression level: " .. vm:get("compression"))
+    end
+
+DESCRIPTION
+    This package allows program developers to obtain program options,
+    that is (name, value) pairs from the user, via conventional
+    methods such as command line and config file.
+
+    The module "program-options" re-exports modules listed below, and
+    also provides some utility functions. Each module has a separate
+    man page so please look into them for getting details.
+
+RE-EXPORTED MODULES
+    po.commandLineHelp: table
+        Re-export of the module
+        "program-options/command-line-help". It is responsible for
+        automatically generating usage messages from allowed options.
+
+    po.commandLineParser: table
+        Re-export of the module
+        "program-options/command-line-parser". It parses options from
+        a single sequence of strings, i.e. command line arguments.
+
+    po.optionDescription: table
+        Re-export of the module
+        "program-options/option-description". It is a class that
+        describes a single option.
+
+    po.optionsDescription: table
+        Re-export of the module
+        "program-options/options-description". It is a class that
+        holds a list of allowed options and subgroups of other sets of
+        options.
+
+    po.positionalOptionsDescription: table
+        Re-export of the module
+        "program-options/positional-options-description". It is a
+        class that describes a correspondence between a position of
+        command line argument and its definition.
+
+    po.valueSemantic: table
+        Re-export of the module "program-options/value-semantic". It
+        is a class that describes how an option value is to be parsed
+        and converted into Lua types.
+
+    po.variablesMap: table
+        Re-export of the module "program-options/variables-map". It is
+        a class that stores parsed options.
+
+UTILITY FUNCTIONS
+    po.parseCommandLine(args: table, desc: optionsDescription)
+        Create an instance of commandLineParser, pass parameters to
+        it, and return the result of calling the "run" method. It is a
+        short-hand for:
+
+            po.commandLineParser.new():options(desc):run(args)
+
+    po.printHelp(progName: string, desc: optionsDescription)
+        Create an instance of commandLineHelp, pass parameters to it,
+        and calls the "print" method. It is a short-hand for:
+
+            po.commandLineHelp.new(progName):options(desc):print()
+
+    po.string(): valueSemantic
+        Create an instance of valueSemantic for an option taking a
+        string argument.
+
+    po.integer(): valueSemantic
+        Create an instance of valueSemantic for an option taking an
+        integer argument. The value will be converted into a Lua
+        number.
+
+    po.number(): valueSemantic
+        Create an instance of valueSemantic for an option taking an
+        integral or decimal number. The value will be converted into a
+        Lua number.
+
+    po.boolean(): valueSemantic
+        Create an instance of valueSemantic for an option taking a
+        boolean argument. The value will be converted into a Lua
+        boolean. The value is case-insensitively matched against the
+        following possible strings:
+
+            - "true"
+            - "false"
+            - "yes"   -- Recognized as true
+            - "no"    -- Recognized as false
+
+    po.boolSwitch(): valueSemantic
+        Create an instance of valueSemantic for an option taking no
+        arguments but its mere existence denotes a boolean true, or
+        false if it doesn't exist.
+
+    po.enum(str1: string[, str2: string, ...]): valueSemantic
+        Create an instance of valueSemantic for an option taking a
+        string argument but the possible values are restricted to the
+        given set of strings. For example po.enum("love", "hate")
+        creates a valueSemantic that expects either "love" or "hate".
+
+    po.sequence(inner: valueSemantic): valueSemantic
+        Create an instance of valueSemantic for an option that can
+        appear multiple times. The resulting value will be a Lua
+        sequence whose elements are parsed with "inner" valueSemantic.
