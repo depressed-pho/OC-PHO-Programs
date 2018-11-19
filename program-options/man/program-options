@@ -4,15 +4,18 @@ NAME
 SYNOPSIS
     local po = require("program-options")
 
+    -- Define a set of allowed options.
     local desc = po.optionsDescription.new("Allowed options")
     desc.addOptions()
         ("help", "produce help message")
         ("compression,c", po.integer():default(0), "compression level")
 
+    -- Parse command line options.
     local vm = po.variablesMap.new()
     vm:store(po.parseCommandLine({"-c", "10"}, desc)
     vm:notify()
 
+    -- Examine the parsed options.
     if vm:has("help") then
         po.printHelp("prog", desc)
     else

@@ -37,14 +37,14 @@ function commandLineHelp:print(...)
     local optsColumnWidth = nil
     if args.n == 0 then
         stream = io.output()
-        width  = self:_termWidth()
+        width  = self:_termWidth(stream)
     elseif args.n == 1 then
         if type(args[1]) == "number" then
             stream = io.output()
             width  = args[1]
         else
             stream = args[1]
-            width  = 80
+            width  = self:_termWidth(stream)
         end
     elseif args.n == 2 then
         if type(args[1]) == "number" then
@@ -65,16 +65,33 @@ function commandLineHelp:print(...)
         optsColumnWidth = args[3]
     end
     stream:write(self:format(width, optsColumnWidth))
+    return self
 end
 
-function commandLineHelp:_termWidth() -- luacheck: ignore self
+function commandLineHelp:_termWidth(stream) -- luacheck: ignore self
+    -- Check that at least "stream" looks like a TTY. We can't
+    -- actually obtain the gpu component it uses without diving into
+    -- internals of OSes too deeply.
+    local isTTY = false
+    if stream.tty then
+        -- OpenOS TTY
+        isTTY = true
+    end
+    if not isTTY then
+        -- The stream doesn't look like a TTY
+        return 80
+    end
+
     -- Do we have the term API from OpenOS? If so we use it.
     local ok, result = pcall(require, "term")
     if ok then
+        -- This will be the width of the primary screen and can be
+        -- very wrong. But what else we can do...?
         local w, _, _, _, _, _ = result.getViewport()
         return w
     else
-        error("Unsupported OS: cannot detect the width of the terminal")
+        -- Unsupported OS: cannot detect the width of the terminal.
+        return 80
     end
 end
 

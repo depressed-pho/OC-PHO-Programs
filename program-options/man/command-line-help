@@ -1,0 +1,69 @@
+NAME
+    program-options/command-line-help -- Usage message generator
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Define a set of allowed options.
+    local desc = po.optionsDescription.new("Allowed options")
+    desc.addOptions()
+        ("help", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    -- Create an instance of commandLineHelp.
+    local help = po.commandLineHelp.new("prog"):options(desc)
+
+    -- Print it to the default output stream.
+    help:print()
+
+    -- This displays something like:
+    --   Usage: prog [options]
+    --
+    --   Allowed options:
+    --         --help                  produce help message
+    --     -c, --compression=ARG (=0)  compression level
+
+DESCRIPTION
+    This module provides a class that is responsible for automatically
+    generating usage messages from allowed options.
+
+CONSTRUCTOR
+    po.commandLineHelp.new(progName: string): commandLineHelp
+        Create an instance of commandLineHelp. The string "progName"
+        should be the name of the program.
+
+METHODS
+    help:options(opts: optionsDescription): self
+        Set an instance of optionsDescription to generate usage
+        messages from. Calling this method is mandatory before
+        actually generating messages.
+
+    help:positional(posOpts: positionalOptionsDescription): self
+        Set an instance of positionalOptionsDescription that describes
+        a correspondence between a position of command line arguments
+        and its definition. Calling this method is optional, but is
+        strongly recommended if your program takes positional options.
+
+    help:format(width: number[, optsColumnWidth: number]): string
+        Format a usage message. The argument "width" denotes the
+        maximum number of characters on a line. The optional argument
+        "optsColumnWidth" denotes the number of characters reserved
+        for the option column (i.e. left-hand side), which will be
+        automatically calculated if omitted.
+
+    help:print(): self
+    help:print(width: number[, optsColumnWidth: number]): self
+    help:print(handle: any[, width: number[, optsColumnWidth: number]]): self
+        Print a usage message to a file handle. The argument "handle",
+        if given, is the file handle and is io.output() by
+        default. The argument "width" denotes the maximum number of
+        characters on a line, which will be by default the width of
+        the screen pointed by the "handle". The argument
+        "optsColumnWidth" denotes the number of characters reserved
+        for the option column (i.e. left-hand side), which will be
+        automatically calculated if omitted.
+
+        Please note that the automatic detection of screen width only
+        works on supported OSes and when the "handle" is actually a
+        TTY. When the library fails to detect it, the function uses
+        some sensible default value instead.
