@@ -219,7 +219,7 @@ t:subtest(
 
         local help = po.commandLineHelp.new("grep"):options(allDesc):positional(posDesc)
         local got  = help:format(80)
-        local exp  = [[Usage: grep [options] PATTERN [FILE...]
+        local exp  = [[Usage: grep [options] [--] PATTERN [FILE...]
 
 Miscellaneous:
   -h, --help                produce help message

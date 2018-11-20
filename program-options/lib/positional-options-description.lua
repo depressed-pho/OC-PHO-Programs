@@ -46,6 +46,10 @@ function positionalOptionsDescription:add(name, maxCount)
     end
 end
 
+function positionalOptionsDescription:__len()
+    return self._maxTotalCount
+end
+
 -- Get the name of option that should be associated with a given
 -- position. May return nil.
 function positionalOptionsDescription:nameForPosition(position)

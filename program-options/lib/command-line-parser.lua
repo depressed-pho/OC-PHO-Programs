@@ -40,8 +40,7 @@ function commandLineParser:extraParser(parser)
     return self
 end
 
--- Treat any unrecognized options as positional ones but not option
--- arguments.
+-- Treat any unrecognized options as positional ones.
 function commandLineParser:allowUnregistered()
     self._allowUnregistered = true
     return self

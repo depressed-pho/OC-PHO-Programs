@@ -41,6 +41,7 @@ This package is modeled after
 * [program-options/options-description](man/options-description)
 * [program-options/positional-options-description](man/positional-options-description)
 * [program-options/value-semantic](man/value-semantic)
+* [program-options/variable-value](man/variable-value)
 * [program-options/variables-map](man/variables-map)
 
 ## Supported OSes

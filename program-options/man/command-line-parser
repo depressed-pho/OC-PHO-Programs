@@ -1,0 +1,91 @@
+NAME
+    program-options/command-line-parser -- Parse command line arguments
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Define a set of allowed options.
+    local desc = po.optionsDescription.new("Allowed options")
+    desc.addOptions()
+        ("help", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    -- Parse command line arguments.
+    local vm = po.variablesMap.new()
+    vm:store(po.commandLineParser.new():options(desc):run({"--help"}))
+    vm:notify()
+
+    -- The map "vm" will have the following entries:
+    -- {
+    --     help: true
+    --     compression: 0
+    -- }
+
+DESCRIPTION
+    This module provides a class that parses options from a single
+    sequence of strings, i.e. command line arguments.
+
+CONSTRUCTOR
+    po.commandLineParser.new(): commandLineParser
+        Create an empty instance of commandLineParser.
+
+METHODS
+    parser:options(opts: optionsDescription): self
+        Set an instance of optionsDescription containing definitions
+        of all the available options. Calling this method is mandatory
+        before actually parsing options.
+
+    parser:positional(posOpts: positionalOptionsDescription): self
+        Set an instance of positionalOptionsDescription that describes
+        a correspondence between a position of command line arguments
+        and its definition. Calling this method is optional, but is
+        needed if your program takes positional options.
+
+    parser:extraParser(p: (string)->(string, string)): self
+        Install an extra parser function. This method can be called
+        multiple times to install zero or more extra parsers. An extra
+        parser is a function which takes an unmodified command line
+        argument, and expected to return the following values:
+
+            * A pair of an option name and its corresponding value, if
+              the option has a value.
+            * A single string denoting an option name, if the option
+              has no values.
+            * nil, if the function is not willing to parse the given
+              argument.
+
+        When there are extra parsers, they will be called on each
+        command line argument before being processed by the
+        library. This can be used to accept non-conventional
+        arguments. For example, the gcc compiler has "-frtti" and
+        "-fno-rtti" options, and this syntax is not directly
+        supported:
+
+            local function features(arg)
+                local name = arg:match("^%-fno%-(.+)$")
+                if name then
+                    return name, "false"
+                end
+
+                local name = arg:match("^%-f(.+)$")
+                if name then
+                    return name, "true"
+                end
+
+                return nil
+            end
+            parser:extraParser(features)
+
+    parser:allowUnregistered(): self
+        Tell the parser to treat any unrecognized options as
+        positional ones, instead of raising an error.
+
+    parser:run(args: table): map<string, variableValue>
+        Parse a sequence of strings (i.e. command line arguments) and
+        return a map from option names to their corresponding parsed
+        values. The map object is from the "containers" package and is
+        not a regular Lua table.
+
+        Typically you won't directly use the result of this
+        method. Instead it'll be passed to the "store" method of a
+        variableMap object.

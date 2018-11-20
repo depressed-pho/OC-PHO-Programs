@@ -29,8 +29,8 @@ DESCRIPTION
 
 CONSTRUCTOR
     po.commandLineHelp.new(progName: string): commandLineHelp
-        Create an instance of commandLineHelp. The string "progName"
-        should be the name of the program.
+        Create an empty instance of commandLineHelp. The string
+        "progName" should be the name of the program.
 
 METHODS
     help:options(opts: optionsDescription): self
@@ -58,7 +58,7 @@ METHODS
         if given, is the file handle and is io.output() by
         default. The argument "width" denotes the maximum number of
         characters on a line, which will be by default the width of
-        the screen pointed by the "handle". The argument
+        the screen to which the "handle" redirects. The argument
         "optsColumnWidth" denotes the number of characters reserved
         for the option column (i.e. left-hand side), which will be
         automatically calculated if omitted.

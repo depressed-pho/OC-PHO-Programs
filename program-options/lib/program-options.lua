@@ -9,6 +9,7 @@ po.optionsDescription           = lazy.require('program-options/options-descript
 po.positionalOptionsDescription = lazy.require('program-options/positional-options-description')
 po.valueSemantic                = lazy.require('program-options/value-semantic')
 po.variablesMap                 = lazy.require('program-options/variables-map')
+po.variableValue                = lazy.require('program-options/variable-value')
 
 -- Utility functions
 function po.parseCommandLine(args, desc)

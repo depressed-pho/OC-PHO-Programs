@@ -1,5 +1,5 @@
 NAME
-    program-options - Advanced program option parser
+    program-options -- Advanced program option parser
 
 SYNOPSIS
     local po = require("program-options")
@@ -10,7 +10,7 @@ SYNOPSIS
         ("help", "produce help message")
         ("compression,c", po.integer():default(0), "compression level")
 
-    -- Parse command line options.
+    -- Parse command line arguments.
     local vm = po.variablesMap.new()
     vm:store(po.parseCommandLine({"-c", "10"}, desc)
     vm:notify()
@@ -66,7 +66,13 @@ RE-EXPORTED MODULES
 
     po.variablesMap: table
         Re-export of the module "program-options/variables-map". It is
-        a class that stores parsed options.
+        a class that stores a set of parsed options.
+
+    po.variableValue: table
+        Re-export of the module "program-options/variable-value". It
+        is a class that stores a single parsed option. The class is
+        not meant to be directly used by application programmers, and
+        is used for implementing custom parsers.
 
 UTILITY FUNCTIONS
     po.parseCommandLine(args: table, desc: optionsDescription)
