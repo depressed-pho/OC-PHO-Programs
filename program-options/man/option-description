@@ -1,0 +1,55 @@
+NAME
+    program-options/option-description -- Describe a single option
+
+SYNOPSIS
+    local po = require("program-options")
+
+    local opt = po.optionDescription.new(
+                    "compression,c",
+                    po.integer():default(0),
+                    "compression level")
+    print opt:canonicalName() -- prints "compression"
+
+DESCRIPTION
+    This module provides a class that describes a single
+    option. Application programmers don't usually use it directly.
+
+CONSTRUCTOR
+    po.optionDescription.new(
+        names: string, sem: valueSemantic, desc: string|nil): optionDescription
+
+        Create an instance of optionDescription. The parameter "names"
+        is a possibly comma-separated pair of option names:
+
+            * "long,l" -- The option has both long and short names.
+            * "long"   -- The option only has a long name.
+            * "l"      -- The option only has a short name.
+
+        The parameter "sem" is an instance of valueSemantic. The
+        optional parameter "desc" is a human-readable description of
+        the option.
+
+METHODS
+    opt:canonicalName(): string
+        Return the canonical name of the option to be used as a key in
+        a variablesMap. It will be a long name if one exists, or a
+        short name otherwise.
+
+    opt:longName(): string|nil
+        Return a long name of the option if one exists, or nil
+        otherwise.
+
+    opt:shortName(): string|nil
+        Return a short name of the option if one exists, or nil
+        otherwise.
+
+    opt:semantic(): valueSemantic
+        Return an instance of valueSemantic for the option.
+
+    opt:description(): string
+        Return a human-readable description of the option if one
+        exists, or nil otherwise.
+
+    opt:match(name: string): boolean
+        Return true iff the given string is identical to either a long
+        name or a short name of the option.

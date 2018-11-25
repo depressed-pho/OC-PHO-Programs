@@ -138,7 +138,7 @@ function commandLineHelp:_usage()
     end
     -- The [--] is shown iff there are any positional arguments.
     if #self._posOpts > 0 then
-        table.insert(words, pp.text("[--]")
+        table.insert(words, pp.text("[--]"))
     end
     -- Now we enumerate positional arguments like "ARG1 ARG2
     -- [ARG3...]".
