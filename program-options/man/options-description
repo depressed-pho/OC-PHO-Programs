@@ -1,0 +1,98 @@
+NAME
+    program-options/options-description -- Hold a list of allowed options
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Define a set of allowed options.
+    local opts = po.optionsDescription.new("Allowed options")
+    opts:addOptions()
+        ("help", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    -- Define a set of hidden options, and add it to "desc" as a subgroup.
+    local hidden = po.optionsDescription.new():hidden()
+    hidden.addOptions()
+        ("file", po.string())
+
+    -- This only shows --help and --compression while --file is in
+    -- fact a valid option.
+    opts:print()
+
+DESCRIPTION
+    This module provides a class that holds a list of allowed options
+    and subgroups of other sets of options.
+
+CONSTRUCTOR
+    po.optionsDescription.new(caption: string|nil): optionsDescription
+        Create an empty instance of optionsDescription with an
+        optional caption string. The caption, if provided, will be
+        used in usage messages as a caption for this group of options.
+
+METHODS
+    opts:add(opt: optionDescription): self
+        Add an instance of optionDescription describing a single
+        option. Application programmers aren't expected to use this
+        method directly.
+
+    opts:add(group: optionsDescription): self
+        Add another instance of optionsDescription as a
+        subgroup. Option parsers will find descriptions without a
+        problem even if they are inside a nested optionsDescription,
+        while usage messages will be divided into groups. It is
+        recommended to divide groups when the application has a lot of
+        options, as users will have a hard time reading long,
+        cluttered usage messages.
+
+    opts:addOptions(): function
+        Return a helper function that accepts the following arguments
+        to construct and register an option description:
+
+            * (names: string)
+            * (names: string, desc: string)
+            * (names: string, sem: valueSemantic)
+            * (names: string, sem: valueSemantic, desc: string)
+
+        The parameter "names" is a possibly comma-separated pair of
+        option names:
+
+            * "long,l" -- The option has both long and short names.
+            * "long"   -- The option only has a long name.
+            * "l"      -- The option only has a short name.
+
+        The parameter "sem" is an instance of valueSemantic. The
+        optional parameter "desc" is a human-readable description of
+        the option.
+
+        The helper function returns the helper itself to allow more
+        options to be registered.
+
+    opts:hidden(): self
+        State that options in this optionsDescription should not be
+        shown in usage messages. This is mainly for options that are
+        expected to be given as positional options rather than named
+        ones.
+
+    opts:isHidden(): boolean
+        Return true iff options in this optionsDescription is expected
+        to be hidden.
+
+    opts:find(name: string): optionDescription|nil
+        Search for an optionDescription by a given short or a long
+        name of option. Options in nested groups will also be searched
+        for. Return nil if no such option exists.
+
+    opts:caption(): string|nil
+        Return the caption string for this group of options, or nil if
+        no captions are given.
+
+    opts:options(): array<optionDescription>
+        Return an array (from "container" package) of
+        optionDescription registered directly to this group.
+
+    opts:groups(): array<optionsDescription>
+        Return an array of subgroups registered to this group.
+
+    opts:allOpts(): set<optionDescription>
+        Return a set (from "container" package) of all the registered
+        optionDescription, including ones that are in subgroups.

@@ -12,7 +12,8 @@ SYNOPSIS
 
 DESCRIPTION
     This module provides a class that describes a single
-    option. Application programmers don't usually use it directly.
+    option. Application programmers aren't expected to use it
+    directly.
 
 CONSTRUCTOR
     po.optionDescription.new(

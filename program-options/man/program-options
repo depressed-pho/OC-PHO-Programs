@@ -6,7 +6,7 @@ SYNOPSIS
 
     -- Define a set of allowed options.
     local desc = po.optionsDescription.new("Allowed options")
-    desc.addOptions()
+    desc:addOptions()
         ("help", "produce help message")
         ("compression,c", po.integer():default(0), "compression level")
 
@@ -45,8 +45,8 @@ RE-EXPORTED MODULES
     po.optionDescription: table
         Re-export of the module
         "program-options/option-description". It is a class that
-        describes a single option. Application programmers don't
-        usually use it directly.
+        describes a single option. Application programmers aren't
+        expected to use it directly.
 
     po.optionsDescription: table
         Re-export of the module

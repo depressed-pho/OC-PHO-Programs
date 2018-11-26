@@ -6,7 +6,7 @@ SYNOPSIS
 
     -- Define a set of allowed options.
     local desc = po.optionsDescription.new("Allowed options")
-    desc.addOptions()
+    desc:addOptions()
         ("help", "produce help message")
         ("compression,c", po.integer():default(0), "compression level")
 

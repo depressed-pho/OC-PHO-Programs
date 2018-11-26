@@ -95,7 +95,7 @@ function optionsDescription:addOptions()
 end
 
 -- State that options in this optionsDescription should not be shown
--- in the help message.
+-- in usage messages.
 function optionsDescription:hidden()
     self._hidden = true
     return self
