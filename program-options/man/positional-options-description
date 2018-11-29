@@ -1,0 +1,63 @@
+NAME
+    program-options/positional-options-description -- Positional options
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Define a set of regular options.
+    local desc = po.optionsDescription.new("Allowed options")
+    desc:addOptions()
+        ("help", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    -- Define a set of hidden options.
+    local hidden = po.optionsDescription.new():hidden()
+    hidden:addOptions()
+        ("file", po.string())
+
+    -- Register it as a subgroup.
+    desc:add(hidden)
+
+    -- Define positional options.
+    local posOpts = po.positionalOptionsDescription.new()
+    posOpts:add("file", 1) -- The first one is a "file".
+
+    -- Parse the command line.
+    local vm = po.variablesMap.new()
+    vm:store(
+        po.commandLineParser.new()
+            :options(desc)
+            :positional(posOpts)
+            :run({"-c", "10", "foo.txt"}))
+    vm:notify()
+
+    -- The map "vm" will have the following entries:
+    -- {
+    --     compression: 10,
+    --     file: "foo.txt"
+    -- }
+
+DESCRIPTION
+    This modules provides a class that describes a correspondence
+    between a position of command line argument and its definition.
+
+CONSTRUCTOR
+    po.positionalOptionsDescription.new(): positionalOptionsDescription
+        Create an empty instance of positionalOptionsDescription.
+
+METHODS
+    posOpts:add(name: string, maxCount: number): self
+        Specify that up to "maxCount" next positional options should
+        use a definition whose canonical name is "name". The value of
+        math.huge means "unlimited". No calls to the method can be
+        made after call with "maxCount" equal to math.huge.
+
+    posOpts:nameForPosition(position: number): string|nil
+        Return the name of option that should be associated with a
+        given position.
+
+    posOpts:entries(): function
+        Return an iterator producing (pos, name) where pos is the
+        position and name is the option name. If there is an option
+        that can appear infinitely many times, its position will be
+        denoted as math.huge.
