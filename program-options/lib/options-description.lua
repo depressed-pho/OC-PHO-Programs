@@ -2,7 +2,6 @@ local array = require('containers/array')
 local map   = require('containers/map')
 local set   = require('containers/set')
 local optionDescription = require('program-options/option-description')
-local valueSemantic     = require('program-options/value-semantic')
 local optionsDescription = {}
 optionsDescription.__index = optionsDescription
 
@@ -59,36 +58,7 @@ end
 
 function optionsDescription:addOptions()
     local function helper(...)
-        local args = table.pack(...)
-        if args.n == 1 then
-            local name = args[1]
-            local sem  = valueSemantic.new():implicit(true):noArgs()
-            self:add(
-                optionDescription.new(name, sem))
-        elseif args.n == 2 then
-            if type(args[2]) == "string" then
-                local name, description = ...
-                local sem = valueSemantic.new():implicit(true):noArgs()
-                self:add(
-                    optionDescription.new(name, sem, description))
-            else
-                local name, sem = ...
-                if not valueSemantic.isInstance(sem) then
-                    error("Not an instance of valueSemantic: "..tostring(sem), 2)
-                end
-                self:add(
-                    optionDescription.new(name, sem))
-            end
-        elseif args.n == 3 then
-            local name, sem, description = ...
-            if not valueSemantic.isInstance(sem) then
-                error("Not an instance of valueSemantic: "..tostring(sem), 2)
-            end
-            self:add(
-                optionDescription.new(name, sem, description))
-        else
-            error("wrong number of arguments", 2)
-        end
+        self:add(optionDescription.new(...))
         return helper
     end
     return helper

@@ -1,18 +1,48 @@
+local valueSemantic = require('program-options/value-semantic')
+
 local optionDescription = {}
 optionDescription.__index = optionDescription
 
-function optionDescription.new(names, semantic, description)
-    checkArg(1, names, "string")
-    checkArg(2, semantic, "table")
-    checkArg(3, description, "string", "nil")
+function optionDescription.new(...)
     local self = setmetatable({}, optionDescription)
-
     self._longName    = nil
     self._shortName   = nil
-    self._semantic    = semantic
-    self._description = description
+    self._semantic    = nil
+    self._description = nil
 
-    self:_parseNames(names)
+    local args = table.pack(...)
+    if args.n == 1 then
+        checkArg(1, args[1], "string")
+        self:_parseNames(args[1])
+        self._semantic = valueSemantic.new():implicit(true):noArgs()
+    elseif args.n == 2 then
+        if type(args[2]) == "string" then
+            checkArg(1, args[1], "string")
+            self:_parseNames(args[1])
+            self._semantic = valueSemantic.new():implicit(true):noArgs()
+            self._description = args[2]
+        else
+            checkArg(1, args[1], "string")
+            self:_parseNames(args[1])
+            if valueSemantic.isInstance(args[2]) then
+                error("Not an instance of valueSemantic: "..tostring(args[2]), 2)
+            else
+                self._semantic = args[2]
+            end
+        end
+    elseif args.n == 3 then
+        checkArg(1, args[1], "string")
+        checkArg(3, args[3], "string")
+        self:_parseNames(args[1])
+        if valueSemantic.isInstance(args[2]) then
+            error("Not an instance of valueSemantic: "..tostring(args[2]), 2)
+        else
+            self._semantic = args[2]
+        end
+        self._description = args[3]
+    else
+        error("wrong number of arguments", 2)
+    end
     return self
 end
 

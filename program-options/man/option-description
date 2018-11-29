@@ -11,13 +11,11 @@ SYNOPSIS
     print opt:canonicalName() -- prints "compression"
 
 DESCRIPTION
-    This module provides a class that describes a single
-    option. Application programmers aren't expected to use it
-    directly.
+    This module provides a class that describes a single option.
 
 CONSTRUCTOR
     po.optionDescription.new(
-        names: string, sem: valueSemantic, desc: string|nil): optionDescription
+        names: string[, sem: valueSemantic][, desc: string]): optionDescription
 
         Create an instance of optionDescription. The parameter "names"
         is a possibly comma-separated pair of option names:
@@ -26,9 +24,15 @@ CONSTRUCTOR
             * "long"   -- The option only has a long name.
             * "l"      -- The option only has a short name.
 
-        The parameter "sem" is an instance of valueSemantic. The
-        optional parameter "desc" is a human-readable description of
-        the option.
+        The optional parameter "sem" is an instance of
+        valueSemantic. It is defaulted to the following valueSemantic,
+        i.e. an option whose value is always the boolean true and
+        takes no explicit values:
+
+            po.valueSemantic.new():implicit(true):noArgs()
+
+        The optional parameter "desc" is a human-readable description
+        of the option.
 
 METHODS
     opt:canonicalName(): string

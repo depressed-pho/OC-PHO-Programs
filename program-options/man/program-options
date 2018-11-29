@@ -45,8 +45,7 @@ RE-EXPORTED MODULES
     po.optionDescription: table
         Re-export of the module
         "program-options/option-description". It is a class that
-        describes a single option. Application programmers aren't
-        expected to use it directly.
+        describes a single option.
 
     po.optionsDescription: table
         Re-export of the module

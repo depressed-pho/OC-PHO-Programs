@@ -32,8 +32,7 @@ CONSTRUCTOR
 METHODS
     opts:add(opt: optionDescription): self
         Add an instance of optionDescription describing a single
-        option. Application programmers aren't expected to use this
-        method directly.
+        option.
 
     opts:add(group: optionsDescription): self
         Add another instance of optionsDescription as a
@@ -45,27 +44,10 @@ METHODS
         cluttered usage messages.
 
     opts:addOptions(): function
-        Return a helper function that accepts the following arguments
-        to construct and register an option description:
-
-            * (names: string)
-            * (names: string, desc: string)
-            * (names: string, sem: valueSemantic)
-            * (names: string, sem: valueSemantic, desc: string)
-
-        The parameter "names" is a possibly comma-separated pair of
-        option names:
-
-            * "long,l" -- The option has both long and short names.
-            * "long"   -- The option only has a long name.
-            * "l"      -- The option only has a short name.
-
-        The parameter "sem" is an instance of valueSemantic. The
-        optional parameter "desc" is a human-readable description of
-        the option.
-
-        The helper function returns the helper itself to allow more
-        options to be registered.
+        Return a helper function that forwards arguments to
+        po.optionDescription.new() to construct and register an option
+        description. The helper function returns the helper itself to
+        allow more options to be registered.
 
     opts:hidden(): self
         State that options in this optionsDescription should not be
