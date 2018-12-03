@@ -71,7 +71,7 @@ METHODS
         occurs more the once in a single call of vm:store(). The
         function takes (old, new) values and is expected to return
         "old" with "new" somehow appended to. The default appender
-        function simply discards the old value and return the new
+        function simply discards the old value and returns the new
         value, which means "--opt=10 --opt=20" would be identical to
         "--opt=20".
 
@@ -80,13 +80,9 @@ METHODS
         occurs more than once in multiple calls of vm:store(),
         i.e. multiple sources of options. The function takes (old,
         new) values and is expected to return "old" with "new" somehow
-        merged to.
-
-    sem:merging(): self
-        State that multiple occurences of the option in different
-        sources should result in those options combined together, as
-        opposed to the last source being preferred. This only makes
-        sence if a merger function is also defined.
+        merged to. The default merger function simply discards the old
+        value and returns the new value, which means the last source
+        is preferred.
 
     sem:noArgs(): self
         State that the option cannot take any arguments, e.g. "--opt"

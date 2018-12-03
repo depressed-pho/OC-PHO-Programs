@@ -9,8 +9,7 @@ function valueSemantic.new()
     self._name      = "ARG"
     self._notifier  = function (_) end
     self._appender  = function (_, val) return val end
-    self._merger    = nil -- nil | (any, any)->any
-    self._merging   = false
+    self._merger    = function (_, val) return val end
     self._noArgs    = false
     self._parser    = function (str) return str end
     self._formatter = tostring
@@ -82,15 +81,6 @@ function valueSemantic:merger(f)
     return self
 end
 
--- State that multiple occurences of the option in different sources
--- should result in those options combined together, as opposed to the
--- last source being preferred. This only makes sence if a merger
--- function is also defined.
-function valueSemantic:merging()
-    self._merging = true
-    return self
-end
-
 -- State that the option cannot take any arguments.
 function valueSemantic:noArgs()
     self._noArgs = true
@@ -123,15 +113,7 @@ function valueSemantic:append(oldValue, newValue)
 end
 
 function valueSemantic:merge(oldValue, newValue)
-    if self._merging then
-        if self._merger then
-            return self._merger(oldValue, newValue)
-        else
-            error("Misuse of valueSemantic:merging(): a merging function is required", 2)
-        end
-    else
-        return newValue
-    end
+    return self._merger(oldValue, newValue)
 end
 
 function valueSemantic:parse(strVal)
