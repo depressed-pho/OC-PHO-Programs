@@ -161,7 +161,7 @@ function commandLineHelp:_usage()
         if pos == math.huge then
             doc = doc .. pp.text("...")
         end
-        if not sem:isRequired() then
+        if not opt:isRequired() then
             doc = pp.brackets(doc)
         end
         table.insert(words, doc)

@@ -18,9 +18,11 @@ outputCtrl:addOptions()
     ("exclude"  , po.sequence(po.string()):name("PATTERN"), "skip files that match the pattern")
 
 local hidden = po.optionsDescription.new():hidden()
+hidden:add(
+    po.optionDescription.new(
+        "pattern", po.string():name("PATTERN")):required())
 hidden:addOptions()
-    ("pattern", po.string():required():name("PATTERN"))
-    ("file"   , po.sequence(po.string()):name("FILE"))
+    ("file", po.sequence(po.string()):name("FILE"))
 
 local posDesc = po.positionalOptionsDescription.new()
 posDesc:add("pattern", 1):add("file", math.huge)

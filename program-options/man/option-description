@@ -35,6 +35,15 @@ CONSTRUCTOR
         of the option.
 
 METHODS
+    opt:required(): self
+        State that the occurence of the option is mandatory, within a
+        single call of method "store" of variablesMap. This means the
+        option is not really optional, which is strange if it is a
+        regular option, but is typical for positional options.
+
+    opt:isRequired(): boolean
+        Return true iff the occurence of the option is mandatory.
+
     opt:canonicalName(): string
         Return the canonical name of the option to be used as a key in
         a variablesMap. It will be a long name if one exists, or a

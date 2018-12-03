@@ -221,7 +221,7 @@ function commandLineParser:run(args)
         local name = opt:canonicalName()
         if not ret:has(name) then
             local sem = opt:semantic()
-            if sem:isRequired() then
+            if opt:isRequired() then
                 -- But if it's a positional option, prefer it in the
                 -- error.
                 if self._posOpts:nameForPosition(positionalIdx) == name then

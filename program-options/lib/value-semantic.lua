@@ -12,7 +12,6 @@ function valueSemantic.new()
     self._merger    = nil -- nil | (any, any)->any
     self._merging   = false
     self._noArgs    = false
-    self._required  = false
     self._parser    = function (str) return str end
     self._formatter = tostring
 
@@ -100,17 +99,6 @@ end
 
 function valueSemantic:isNoArgs()
     return self._noArgs
-end
-
--- State that the occurence of the option is mandatory, within a
--- single call of vm:store().
-function valueSemantic:required()
-    self._required = true
-    return self
-end
-
-function valueSemantic:isRequired()
-    return self._required
 end
 
 function valueSemantic:parser(f)

@@ -9,6 +9,7 @@ function optionDescription.new(...)
     self._shortName   = nil
     self._semantic    = nil
     self._description = nil
+    self._required    = false
 
     local args = table.pack(...)
     if args.n == 1 then
@@ -79,6 +80,17 @@ function optionDescription:_parseNames(names)
         error("A short name must be a single letter: "..self._shortName, 3)
     end
     return self
+end
+
+-- State that the occurence of the option is mandatory, within a
+-- single call of vm:store().
+function optionDescription:required()
+    self._required = true
+    return self
+end
+
+function optionDescription:isRequired()
+    return self._required
 end
 
 -- Canonical name of the option to be used in variablesMap.
