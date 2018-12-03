@@ -84,7 +84,7 @@ end
 
 -- State that multiple occurences of the option in different sources
 -- should result in those options combined together, as opposed to the
--- last source being preferred. This only makes sence if a merging
+-- last source being preferred. This only makes sence if a merger
 -- function is also defined.
 function valueSemantic:merging()
     self._merging = true

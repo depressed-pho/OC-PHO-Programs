@@ -1,0 +1,130 @@
+NAME
+    value-semantic -- Semantics of option values
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Create an instance of valueSemantic for an option taking an
+    -- integer argument. The The value will be converted into a Lua
+    -- number. This is actually what po.integer() does.
+    local function integer()
+        return po.valueSemantic.new():name("INT"):parser(
+            function (strVal)
+                if strVal:match("^%-?%d+$") then
+                    return tonumber(strVal)
+                else
+                    error("Not an integer: "..strVal)
+                end
+            end)
+    end
+
+    -- Use it for defining options.
+    local desc = po.optionsDescription.new("Allowed options")
+    desc:addOptions()
+        ("int,i", integer():default(0), "integer value")
+
+    local vm = po.variablesMap.new()
+    vm:store(po.parseCommandLine({"--int=42"}, desc)
+    vm:notify()
+
+    print(vm:get("int") * 10) -- prints 420
+
+DESCRIPTION
+    This module provides a class that describes how an option value is
+    to be parsed and converted into Lua types.
+
+CONSTRUCTOR
+    po.valueSemantic.new(): valueSemantic
+        Create an empty instance of valueSemantic, which does no
+        conversions nor validations of option values.
+
+METHODS
+    sem:default(val: any): self
+        Set the default Lua value. The value will be used when the
+        option does not occur in a single call of method "store" of
+        variablesMap.
+
+    sem:default(): any
+        Get the default Lua value, or nil if no such value is set.
+
+    sem:implicit(val: any): self
+        Set the implicit Lua value. The value will be used when the
+        option occurs with no value, like "--opt" as opposed to
+        "--opt=val".
+
+    sem:implicit(): any
+        Get the implicit Lua value, or nil if no such value is set.
+
+    sem:name(str: string): self
+        Set the name of the value used in usage messages, i.e. ARG in
+        --opt=ARG.
+
+    sem:name(): string
+        Get the name of the value used in usage messages.
+
+    sem:notifier(func: (any)->any): self
+        Set the notifier function. It will be called with a parsed
+        option value when the option is parsed.
+
+    sem:appender(func: (any, any)->any): self
+        Set the appender function. It will be called when the option
+        occurs more the once in a single call of vm:store(). The
+        function takes (old, new) values and is expected to return
+        "old" with "new" somehow appended to. The default appender
+        function simply discards the old value and return the new
+        value, which means "--opt=10 --opt=20" would be identical to
+        "--opt=20".
+
+    sem:merger(func: (any, any)->any): self
+        Set the merger function. It will be called when the option
+        occurs more than once in multiple calls of vm:store(),
+        i.e. multiple sources of options. The function takes (old,
+        new) values and is expected to return "old" with "new" somehow
+        merged to.
+
+    sem:merging(): self
+        State that multiple occurences of the option in different
+        sources should result in those options combined together, as
+        opposed to the last source being preferred. This only makes
+        sence if a merger function is also defined.
+
+    sem:noArgs(): self
+        State that the option cannot take any arguments, e.g. "--opt"
+        would be accepted but "--opt=arg" will result in an
+        error. Such options typically have implicit values, but are
+        not required to.
+
+    sem:isNoArgs(): boolean
+        Return true iff the option cannot take any arguments.
+
+    sem:parser(func: (string)->any): self
+        Set the parser function. It will be called when the option
+        occurs with a value, e.g. "--opt=arg". The option takes a
+        string value and is expected to return a parsed Lua value. The
+        default parser function simply returns the string value.
+
+    sem:formatter(func: (any)->string): self
+        Set the formatter function, which is opposite of the parser
+        function. It will be used to generate usage messages. It takes
+        a Lua value and is expected to return a formatted string
+        value. The default formatter function is the built-in
+        "tostring".
+
+    sem:notify(val: any): self
+        Call the notifier function with the given Lua value.
+
+    sem:append(old: any, new: any): any
+        Call the appender function with old and new values, and return
+        the result.
+
+    sem:merge(old: any, new: any): any
+        Call the merger function with old and new values, and return
+        the result.
+
+    sem:parse(val: string): any
+        Call the parser function with a string value, and return the
+        result.
+
+    sem:format(val: any): string
+        Call the formatter function with a Lua value, and return the
+        result.
