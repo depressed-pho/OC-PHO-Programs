@@ -56,8 +56,8 @@ METHODS
         things will happen:
 
         * If the original value is a defaulted one, as opposed to one
-          given explicitly by the user, it will be replaced with the
-          new value.
+          which was given explicitly by the user, it will be replaced
+          with the new value.
 
         * Otherwise the old and new values will be merged together,
           using their merger function given by their valueSemantic. It

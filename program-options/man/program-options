@@ -71,7 +71,7 @@ RE-EXPORTED MODULES
     po.variableValue: table
         Re-export of the module "program-options/variable-value". It
         is a class that stores a single parsed option. The class is
-        not meant to be directly used by application programmers, and
+        not meant to be directly used by application programmers, but
         is used for implementing custom parsers.
 
 UTILITY FUNCTIONS

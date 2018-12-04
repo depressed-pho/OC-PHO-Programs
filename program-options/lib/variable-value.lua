@@ -20,6 +20,7 @@ function variableValue:value(...)
     local args = table.pack(...)
     if args.n > 0 then
         self._value = args[1]
+        return self
     else
         return self._value
     end

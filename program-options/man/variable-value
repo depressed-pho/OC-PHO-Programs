@@ -1,0 +1,30 @@
+NAME
+    program-options/variable-value -- Storage of a single parsed option
+
+DESCRIPTION
+    This module provides a class that stores a single parsed
+    option. The class is not meant to be directly used by application
+    programmers, but is used for implementing custom parsers.
+
+CONSTRUCTOR
+    po.variableValue.new(
+        sem: valueSemantic, value: any, defaulted: boolean): variableValue
+
+        Create an instance of variableValue. "sem" is the
+        valueSemantic of the option. "value" is the parsed Lua
+        value. "defaulted" being true means that the value is a
+        defaulted one, as opposed to one which was given explicitly by
+        the user.
+
+METHODS
+    val:semantic(): valueSemantic
+        Return the valueSemantic of the option.
+
+    val:value(value: any): self
+        Replace the parsed Lua value with a given one.
+
+    val:value(): any
+        Return the parsed Lua value.
+
+    val:defaulted(): boolean
+        Return true iff the value is a defaulted one.
