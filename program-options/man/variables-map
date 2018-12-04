@@ -1,0 +1,76 @@
+NAME
+    program-options/variables-map -- Storage of parsed options
+
+SYNOPSIS
+    local po = require("program-options")
+
+    -- Define a set of allowed options.
+    local desc = po.optionsDescription.new("Allowed options")
+    desc:addOptions()
+        ("help,h", "produce help message")
+        ("compression,c", po.integer():default(0), "compression level")
+
+    -- Parse command line arguments.
+    local vm = po.variablesMap.new()
+    vm:store(po.parseCommandLine({"-h"}, desc)
+    vm:notify()
+
+    -- The map "vm" will have the following entries:
+    -- {
+    --     help: true
+    --     compression: 0
+    -- }
+    if vm:has("help") then
+        po.printHelp("prog", desc)
+    else
+        print("Compression level: " .. vm:get("compression"))
+    end
+
+DESCRIPTION
+    This module provides a container class that stores a set of parsed
+    options. It is essentially a finite map whose keys are the
+    canonical name of options, and values are their corresponding
+    parsed Lua values.
+
+    This is in fact a subclass of "map" from the "container" package.
+
+CONSTRUCTOR
+    po.variablesMap.new(): variablesMap
+        Create an empty map.
+
+METHODS
+    vm:get(key: string[, default: any]): any
+        Get the value associated with the given key, i.e. the
+        canonical name of an option. The optional argument "default",
+        if given, is used as the default value in case the map does
+        not have the given key. An error is thrown if the default
+        value is not supplied and the key does not exist.
+
+    vm:has(key: string): boolean
+        Return true iff a given key exists in the map.
+
+    vm:store(parsedOpts: map<string, variableValue>): self
+        Store a set of parsed options from a single source of options,
+        into the map. When there is an existing option values whose
+        key conflicts with a new option, either of the following
+        things will happen:
+
+        * If the original value is a defaulted one, as opposed to one
+          given explicitly by the user, it will be replaced with the
+          new value.
+
+        * Otherwise the old and new values will be merged together,
+          using their merger function given by their valueSemantic. It
+          will, by default, simply discards the old value and replace
+          it with the new one.
+
+        So if you have two sources, a config file and the command line
+        arguments, and you want the latter to have a higher precedence
+        than the former, you should store options from the former
+        first, then the latter.
+
+    vm:notify(): self
+        State that you have supplied the map with options from all the
+        sources you desire, such as a config file and the command line
+        arguments. For each option value this method calls its
+        notifier function given by its valueSemantic.
