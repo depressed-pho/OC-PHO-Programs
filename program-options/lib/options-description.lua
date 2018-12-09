@@ -38,7 +38,9 @@ function optionsDescription:add(desc)
             error("Duplicate option: "..desc:shortName(), 2)
         else
             self._opts:push(desc)
-            self._optMap:set(desc:longName(), desc)
+            if desc:longName() then
+                self._optMap:set(desc:longName(), desc)
+            end
             if desc:shortName() then
                 self._optMap:set(desc:shortName(), desc)
             end
