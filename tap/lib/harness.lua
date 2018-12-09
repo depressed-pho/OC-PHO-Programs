@@ -28,16 +28,25 @@ function harness:runTests(files) -- [file]
     end
     event.listen("interrupted", interrupted)
 
+    local allOK = true
     for _, file in ipairs(files) do
-        if filesystem.exists(file) then
-            self:_runTest(stats, file)
+        if filesystem.isDirectory(file) then
+            io.stderr:write(file..": is a directory")
+            allOK = false
+        elseif filesystem.exists(file) then
+            if not self:_runTest(stats, file) then
+                allOK = false
+            end
         else
             io.stderr:write(file..": file not found")
+            allOK = false
         end
     end
     self:_write(-2, io.stdout, stats:result())
 
     event.ignore("interrupted", interrupted)
+
+    return allOK
 end
 
 function harness:_runTest(stats, file)
@@ -82,8 +91,10 @@ function harness:_runTest(stats, file)
 
     if stats:isOK(file) then
         self:_write(-1, io.stdout, stats:progress(file).." ok\n")
+        return true
     else
         self:_write(-1, io.stdout, stats:progress(file).." failed\n")
+        return false
     end
 end
 
