@@ -1,6 +1,6 @@
 # algebraic-data-types
 
-This module provides a mechanism to define
+This package provides a mechanism to define
 [algebraic data types](https://en.wikipedia.org/wiki/Algebraic_data_type)
 in Lua. It also supports a limited form of pattern matching.
 
