@@ -53,8 +53,8 @@ t:subtest(
     "changing cursor position",
     function ()
         t:plan(2)
-        ansi.cursorColumn(out, 42);     t:is(out:reset(), "\x1B[43G", "column")
-        ansi.cursorPosition(out, 1, 2); t:is(out:reset(), "\x1B[2;3H", "position")
+        ansi.cursorColumn(out, 42);     t:is(out:reset(), "\x1B[42G", "column")
+        ansi.cursorPosition(out, 1, 2); t:is(out:reset(), "\x1B[1;2H", "position")
     end)
 
 t:subtest(

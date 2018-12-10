@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(21)
+t:plan(29)
 
 local array = t:requireOK('containers/array') or t:bailOut("Can't load array")
 

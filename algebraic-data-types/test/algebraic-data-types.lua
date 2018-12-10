@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(2)
+t:plan(3)
 
 local adt = t:requireOK('algebraic-data-types') or t:bailOut("Can't load algebraic-data-types")
 

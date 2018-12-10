@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(3)
+t:plan(4)
 
 local lazy = t:requireOK('lazy') or t:bailOut("Can't load program-options")
 

@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(1)
+t:plan(18)
 
 local set = t:requireOK('containers/set') or t:bailOut("Can't load set")
 

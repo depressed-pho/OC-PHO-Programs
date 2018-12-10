@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(7)
+t:plan(10)
 
 local pp = t:requireOK('wl-pprint') or t:bailOut("Can't load wl-pprint")
 

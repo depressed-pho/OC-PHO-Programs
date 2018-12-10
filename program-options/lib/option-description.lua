@@ -36,9 +36,9 @@ function optionDescription.new(...)
         checkArg(3, args[3], "string")
         self:_parseNames(args[1])
         if valueSemantic.isInstance(args[2]) then
-            error("Not an instance of valueSemantic: "..tostring(args[2]), 2)
-        else
             self._semantic = args[2]
+        else
+            error("Not an instance of valueSemantic: "..tostring(args[2]), 2)
         end
         self._description = args[3]
     else

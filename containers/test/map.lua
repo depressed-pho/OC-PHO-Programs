@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(1)
+t:plan(18)
 
 local map = t:requireOK('containers/map') or t:bailOut("Can't load map")
 
@@ -108,6 +108,7 @@ t:subtest(
         t:plan(1)
 
         local values = map.new({a=1, b=2}):values()
+        values.n = nil
         table.sort(values)
         t:isDeeply(values, {1, 2})
     end)

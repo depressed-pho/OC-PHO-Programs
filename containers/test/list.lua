@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(1)
+t:plan(29)
 
 local list = t:requireOK('containers/list') or t:bailOut("Can't load list")
 

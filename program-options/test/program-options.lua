@@ -1,6 +1,6 @@
 local test = require('tap/test')
 local t    = test.new()
-t:plan(1)
+t:plan(10)
 
 local po = t:requireOK('program-options') or t:bailOut("Can't load program-options")
 
