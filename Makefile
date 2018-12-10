@@ -51,6 +51,7 @@ dist:
 	cp mutex/test/*.lua		_dist/test
 	cp tap/bin/*.lua		_dist/bin
 	cp tap/lib/parser/*.lua		_dist/lib/tap/parser
+	cp -r tap/man/*			_dist/man
 	cp program-options/lib/program-options.lua	_dist/lib
 	cp program-options/lib/*.lua	_dist/lib/program-options
 	cp program-options/man/program-options	_dist/man

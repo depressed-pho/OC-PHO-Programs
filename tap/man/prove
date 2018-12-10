@@ -1,0 +1,37 @@
+NAME
+    prove -- Run tests through a TAP harness
+
+SYNOPSIS
+    prove [options] [--] [files or directories]
+
+DESCRIPTION
+    The "prove" command runs TAP test programs and parses the
+    result. Test programs are expected to write TAP results to stdout,
+    and diagnosis messages to stderr.
+
+    See also "tap/test" for writing TAP tests.
+
+OPTIONS
+    MISCELLANEOUS
+        -h             print help message
+            --help     show this man page
+        -v, --verbose  print all test lines
+        -D, --dry      show tests that would have run, without actually running
+
+    SELECTING TESTS TO RUN
+        -r, --recurse  recursively descend into directories
+
+EXIT CODE
+    If any of the tests fail "prove" will exit with non-zero
+    status. Otherwise it exits with 0.
+
+EXAMPLES
+
+        % prove /usr/test/*.lua
+
+    Run all tests under "/usr/test".
+
+        % prove -r /usr/test
+
+    Run all tests under "/usr/test" including ones that are in
+    subdirectories.
