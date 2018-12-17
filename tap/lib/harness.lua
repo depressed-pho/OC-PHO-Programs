@@ -24,7 +24,7 @@ function harness:runTests(files) -- [file]
     -- will also print out statistics even though it would only be
     -- partial.
     local function interrupted()
-        error("FIXME: interrupted")
+        error("Interrupted")
     end
     event.listen("interrupted", interrupted)
 

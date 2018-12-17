@@ -1,0 +1,35 @@
+NAME
+    tap/harness -- Run test programs with statistics
+
+SYNOPSIS
+    local harness = require("tap/harness")
+
+    local h = harness.new {verbosity = 1}
+    h:runTests {
+        "t/foo.lua",
+        "t/bar.lua"
+    }
+
+DESCRIPTION
+    This is a TAP test harness which runs tests, aggregates results,
+    and outputs to STDOUT.
+
+CONSTRUCTOR
+    harness.new([opts: table]): harness
+        Create a new instance of harness. It takes an optional table
+        whose allowed keys are:
+
+        "verbosity"
+            Set the verbosity level:
+
+             1  verbose       Print individual test results to STDOUT.
+             0  normal
+            -1  quiet         Suppress some test output, mostly failures
+                              while tests are running.
+            -2  really quiet  Suppress everything but the tests summary.
+            -3  silent        Suppress everything.
+
+METHODS
+    h:runTests(files: table): boolean
+        Run test programs given as a sequence of file paths. Return
+        true iff no tests fail.
