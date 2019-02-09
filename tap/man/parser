@@ -1,0 +1,17 @@
+NAME
+    tap/parser -- Parse TAP test results
+
+SYNOPSIS
+    local parser = require("tap/parser")
+
+    for result in parser(io.stdin) do
+        print(result:tostring())
+    end
+
+DESCRIPTION
+    This module exports a function that parses TAP test results.
+
+    parser(source: buffer): function
+        The parser function takes an instance of "buffer", such as
+        io.stdin. It returns an iterator which produces instances of
+        "result" from the module "tap/parser/result".
